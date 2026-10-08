@@ -236,6 +236,24 @@ ALIGNED = ('fence', 'hedge', 'railing', 'wall', 'wall.unroofed', 'wall.stone')
 props = have['Props']
 
 # ---------------------------------------------------------------------------
+# THE WORDS THE WORLD RENAMED, STILL SITTING IN THE WINDOW.
+#
+# `magic-rock` became `quick-rock` and `rampart` became `palisade`. Both
+# renames reached the engine and the generator and stopped there, and because
+# `have` is rebuilt from the level's actor on every run the dead rows would be
+# carried for ever.
+#
+# A dead word is not harmless. It is a table claiming to answer for something,
+# and while `magic-rock` sat here looking like a rock that was handled, the
+# thirteen `quick-rock` nodes standing in the Wilds were drawn as nothing at
+# all. The stale row is exactly what made the missing one easy to miss.
+#
+# Tools/undrawn.py reports this in both directions now, so a third rename
+# cannot do it again quietly.
+for _dead in ('magic-rock', 'rampart'):
+    props.pop(_dead, None)
+
+# ---------------------------------------------------------------------------
 # WHAT A DROP LOOKS LIKE LYING ON THE GROUND.
 #
 # Loot was invisible: the frame carried it, the window drew nothing, and the

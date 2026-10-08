@@ -37,15 +37,26 @@ BRIDGE = os.path.join(os.path.dirname(os.path.dirname(SP)), 'interval-bridge')
 OBJ = 'editor_toolset.toolsets.object.ObjectTools'
 LOOK = '/Game/Interval/IntervalLook.IntervalLook'
 TABLES = ['Props', 'PropsUpper', 'Palisades', 'Scatter', 'Roofs', 'Mobs']
+# Of those, the ones keyed by a word the world says. `Scatter` and `Roofs` are
+# keyed by BIOME and by GROUND KIND instead -- meadow, crags, shingle, trodden
+# -- so a word in them is not a node and asking the engine for it is nonsense.
+WORD_TABLES = ['Props', 'PropsUpper', 'Palisades', 'Mobs']
 
 
-def drawable():
-    """Every bare word the look asset answers to."""
+# Words the WINDOW invents and the world never says. `dropped` is the loot
+# fallback: the frame carries an item id, the window draws a bag. Anything
+# else bare in the look that the engine has no word for is a rename that only
+# went half way, which is what `magic-rock` and `rampart` were.
+WINDOW_ONLY = {'dropped'}
+
+
+def drawable(bare=True, tables=None):
+    """Every word the look asset answers to."""
     t = _rpc.call(OBJ, 'get_properties',
                   {'instance': {'refPath': LOOK}, 'properties': TABLES})
     d = json.loads(json.loads(t)['returnValue'])
     words = set()
-    for table in TABLES:
+    for table in (tables or TABLES):
         v = d.get(table)
         if isinstance(v, dict):
             words.update(v)
@@ -56,7 +67,7 @@ def drawable():
                         if row.get(key):
                             words.add(row[key])
     # `wall.roofed` is a sort of `wall`, and a sort answers for its word.
-    return set(w.split('.')[0] for w in words)
+    return set(w.split('.')[0] for w in words) if bare else words
 
 
 def makeable():
@@ -82,15 +93,27 @@ def makeable():
 
 def main():
     can_draw = drawable()
-    missing = [(w, why) for w, why in sorted(makeable().items())
+    can_make = makeable()
+    missing = [(w, why) for w, why in sorted(can_make.items())
                if w not in can_draw]
+    # AND THE OTHER DIRECTION, which is how the first one goes unnoticed. A
+    # word left in the look after the world renamed it reads as a thing that
+    # is handled, so nobody looks for the new word that replaced it.
+    dead = sorted(w for w in drawable(bare=False, tables=WORD_TABLES)
+                  if '.' not in w and w not in can_make and w not in WINDOW_ONLY)
     print('the window can draw %d words' % len(can_draw))
-    if not missing:
-        print('every word the world can make has something to draw it')
+    if not missing and not dead:
+        print('every word the world can make has something to draw it,')
+        print('and the window answers for nothing the world cannot make')
         return 0
-    print('THE WORLD CAN MAKE THESE AND THE WINDOW DRAWS NOTHING:')
-    for w, why in missing:
-        print('    %-20s %s' % (w, why))
+    if missing:
+        print('THE WORLD CAN MAKE THESE AND THE WINDOW DRAWS NOTHING:')
+        for w, why in missing:
+            print('    %-20s %s' % (w, why))
+    if dead:
+        print('THE WINDOW ANSWERS FOR THESE AND THE WORLD CANNOT MAKE THEM:')
+        for w in dead:
+            print('    %-20s a rename that only went half way?' % w)
     return 1
 
 
