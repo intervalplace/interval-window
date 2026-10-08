@@ -901,8 +901,30 @@ if (Code == 11 || Code == 12)
 	float3 Shallow = float3(0.42, 0.50, 0.44);
 	float3 Middle  = float3(0.20, 0.34, 0.38);
 	float3 Deepest = float3(0.055, 0.115, 0.165);
-	float3 Wat = lerp(Shallow, Middle, saturate(Deep * 2.0));
-	Wat = lerp(Wat, Deepest, saturate(Deep * 2.0 - 1.0));
+	// ---- OPENNESS IS NOT DEPTH, AND A RIVER IS NEVER OPEN ----
+	//
+	// `Deep` blends Open (how much water within a tile and a bit) with Wide
+	// (how much within three), and both colour steps were driven off the
+	// blend. That is right for a coast, where the two rise together as you
+	// wade out, and wrong for a river, which is never open at any point along
+	// it: the Great River is three to four tiles across, so even mid-channel
+	// `Wide` stays near nothing, `Deep` never passes about 0.7, and the whole
+	// river was drawn in the SHALLOW colour -- which takes its tint from the
+	// sand it lies on, by design, because shallow water is the bank seen
+	// through a little water.
+	//
+	// So the island's rivers read as dry sandy scars with a pale trickle down
+	// the middle, while a lake twice as wide a few hundred metres away reads
+	// as water. Photographed from above at twenty tiles across: three tiles of
+	// water, of which one was blue.
+	//
+	// The two steps ask the two questions separately now. Whether this is
+	// WATER rather than wet sand is a question about the near count, which
+	// saturates mid-channel on anything three tiles across. Whether it is DEEP
+	// enough to go dark is a question about the wide count, which only broad
+	// water can answer. Open sea has both and is unchanged.
+	float3 Wat = lerp(Shallow, Middle, saturate(Open * 1.35));
+	Wat = lerp(Wat, Deepest, saturate(Wide * 1.25));
 
 	// THE SURFACE. Two trains crossing at an angle, at rates that do not
 	// divide into one another, plus a slow third that breaks up the pair.
@@ -979,7 +1001,9 @@ if (Code == 11 || Code == 12)
 	// AND A NARROWER BAND. Foam belongs where the water is thin enough to
 	// break, which is nearer the sand than 0.30 of the depth; at that width it
 	// reached a good way out into the channel.
-	float Edge = 1.0 - smoothstep(0.02, 0.20, Deep);
+	// AND NARROWER AGAIN. At 0.20 the lace still reached most of the way across
+	// a three-tile river, so two thirds of the water was white.
+	float Edge = 1.0 - smoothstep(0.01, 0.12, Deep);
 	float Lace = smoothstep(-1.1, 1.1, Swell);
 	float Foam = saturate(Edge * (0.40 + 0.60 * Lace));
 	Wat = lerp(Wat, float3(0.82, 0.85, 0.83), Foam * 0.48);
