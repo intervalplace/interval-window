@@ -88,6 +88,16 @@ PARTS = {
     P(CUBE, TIMBER, 1.10, 0.14, 0.14, oz=218),
     P(CONE, ROCK,   0.60, 0.60, 0.62, oz=176, pitch=180),
   ],
+  # The same frame with the rope let go: the posts and the beam stand, nothing
+  # hangs from them any more, and the bell sits on the staging where twelve
+  # pulls left it. A citizen who walks out and finds the frame empty has been
+  # told the thing was finished, by the drawing and not by a message.
+  'bell': [
+    P(CUBE, TIMBER, 0.12, 0.12, 2.20, ox=-42, oz=110),
+    P(CUBE, TIMBER, 0.12, 0.12, 2.20, ox=42,  oz=110),
+    P(CUBE, TIMBER, 1.10, 0.14, 0.14, oz=218),
+    P(CONE, ROCK,   0.60, 0.60, 0.62, ox=96, oz=31),
+  ],
   'tollgate': [
     P(CUBE, TIMBER, 0.18, 0.18, 1.90, ox=-92, oz=95),
     P(CUBE, TIMBER, 0.18, 0.18, 1.90, ox=92,  oz=95),
@@ -1402,11 +1412,26 @@ VILLAGE = {
 UNSEEN = {
   'cart':      (VIL('Cart'),             2.20, 360.0),
   'market':    (VIL('MarketStand_1'),    2.10, 0.0),
-  # `Bell1`, NOT `Bell`. The import names a material after its slot, so the
-  # pack's `Bell` material took the name and the mesh became `Bell1` -- the
-  # same thing happened to Bag and Hay. Pointing at the material instead cost
-  # an entire run: see the note on `write` in apply.py.
-  'bell':      (VIL('Bell1'),            2.20, 360.0),
+  # ---- `bell` IS NOT SEATED, BUT IT IS REACHED ----
+  #
+  # This table is the words no GENERATOR places, and `bell` belongs in it: no
+  # founding ever lays one. It arrives at runtime instead. Twelve pulls turn
+  # the Drowned Bell's `bellwork` into a `bell`, in place, with the same node
+  # id, so the one word nothing seats is the reward for the only work on this
+  # island a citizen cannot finish alone.
+  #
+  # It was drawn as `Bell1`: a bare metre-high handbell. So finishing the
+  # quest DELETED A TEN-METRE CHAPEL and left a handbell standing in the fen.
+  #
+  # Same tower, same scale. What changes is the frame, in PARTS: the rope is
+  # let go, nothing hangs from the beam any more, and the bell sits on the
+  # staging where the pulls left it. A citizen who walks out and finds the
+  # frame empty has been told the work was finished, by the drawing.
+  #
+  # (`Bell1`, NOT `Bell`: the import names a material after its slot, so the
+  # pack's `Bell` material took the name. `landmark.drowned-bell` still uses
+  # that mesh and still needs the warning.)
+  'bell':      (VIL('Bell_Tower'),       2.20, 360.0),
   'span':      (RUIN('BridgeSection'),   1.00, 0.0),
   'spanwork':  (RUIN('BridgeSection'),   0.80, 0.0),
   'altar':     (RUIN('Column_Round_Short'), 1.00, 360.0),
