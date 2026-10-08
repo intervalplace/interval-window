@@ -993,7 +993,12 @@ if (Code == 11 || Code == 12)
 	       + sin(W.x * -0.0019 + W.y * 0.0052 + Time * 0.13) * 0.8;
 	Warp.y = sin(W.x * 0.0033 + W.y * -0.0045 + Time * 0.17)
 	       + sin(W.x * 0.0058 + W.y * 0.0021 + Time * 0.09) * 0.8;
-	float2 Wrp = W.xy + Warp * 210.0;
+	// EASED BACK from 210. At that strength the crests curled into whorls and
+	// the sea read as marbling rather than water: the lattice was gone and
+	// something worse had replaced it. Eighty is enough to stop any two
+	// stretches being in step, which is all that was ever needed, and leaves
+	// the waves looking like waves.
+	float2 Wrp = W.xy + Warp * 80.0;
 
 	// A five metre SWELL, always there, which is what survives distance; and a
 	// metre-and-a-half CHOP on top, faded out with distance because below a
