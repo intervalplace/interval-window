@@ -944,38 +944,56 @@ if (Code == 11 || Code == 12)
 	// Same shape as `Grit` further up, which fades the ground's own hand-scale
 	// relief for the same reason and was written after the same fault.
 	float Calm = saturate(1.0 - (Away - 2200.0) / 6500.0);
-	float2 Wv = W.xy * 0.045;
-	float Swell = sin(Wv.x * 1.00 + Wv.y * 0.62 + Time * 1.15)
-	            + sin(Wv.x * -0.74 + Wv.y * 1.31 + Time * 0.83) * 0.85
-	            + sin(Wv.x * 2.30 + Wv.y * 1.90 + Time * 1.90) * 0.35 * Calm;
-	// ---- TWO WAVE TRAINS ARE STILL A GRID ----
+	// ---- AND THE WAVES GET LONGER, NOT JUST SMALLER ----
 	//
-	// The note at the head of this file says plane waves were chosen over
-	// sin(ax) * sin(by) because the product is a lattice of cells by
-	// construction. True, and not enough: TWO plane waves interfere into a
-	// lattice of their own. It is diagonal rather than square, so it does not
-	// read as tartan, but photographed from above the open sea it is a field
-	// of identical teardrops repeating at a fixed pitch, which is the fault
-	// that was reported and it is the same fault.
+	// Fading the AMPLITUDE is half the answer and it is the half that does not
+	// work. The note above has the diagnosis exactly right: at a hundred metres
+	// a metre is a few pixels, "the bands land on and off the sampling grid,
+	// and what comes out is a hard regular cross-hatch over the whole water".
+	// That is an aliasing fault, and shrinking a pattern that is already below
+	// the pixel does not cure aliasing. Photographed across the water at
+	// Fenmarch it was still corrugated iron from shore to horizon.
 	//
-	// The swell already had a third train. The NORMAL did not, and the normal
-	// is what the sun catches, so the normal is what you can see the pattern
-	// in. Two more here, at angles that share no ratio with the first two and
-	// with the pair of them, so the pattern's period is longer than any stretch
-	// of water on this island.
+	// So the near water keeps its one-and-a-half-metre ripple and the far water
+	// is given a five-metre swell instead: the same waves, stretched, so what
+	// reaches the eye at distance is always several pixels across and cannot
+	// land between samples. Which is also what real water does, because what
+	// survives being looked at from far away is the long swell and not the
+	// chop on top of it.
+	// SCALING THE WAVELENGTH BY DISTANCE WAS WRONG, and the picture said so at
+	// once: `Calm` is measured from the CAMERA, so warping the waves by it
+	// warps their PHASE radially, and the sea came out in concentric rings
+	// centred on the eye that would travel with it. A pattern that follows the
+	// camera is the oldest giveaway there is.
 	//
+	// So the phase never moves. There are two wave sets at fixed scales: a five
+	// metre SWELL, which is always there and is what survives being looked at
+	// from far away, and a metre-and-a-half CHOP added on top of it, faded out
+	// with distance because below a pixel it is not detail, it is moire. Adding
+	// detail in cannot shift what is underneath, so nothing rings.
+	float2 Ws = W.xy * 0.013;
+	float2 Wc = W.xy * 0.045;
+	float SwellL = sin(Ws.x * 1.00 + Ws.y * 0.62 + Time * 0.58)
+	             + sin(Ws.x * -0.74 + Ws.y * 1.31 + Time * 0.42) * 0.85;
+	float SwellC = sin(Wc.x * 1.00 + Wc.y * 0.62 + Time * 1.15)
+	             + sin(Wc.x * -0.74 + Wc.y * 1.31 + Time * 0.83) * 0.85
+	             + sin(Wc.x * 2.30 + Wc.y * 1.90 + Time * 1.90) * 0.35;
+	float Swell = SwellL + SwellC * Calm;
 	// Each coefficient is the wave's DIRECTION times its amplitude, because
-	// this is the gradient of the swell and not a decoration: get that wrong
-	// and the surface lights as though it were a shape it is not.
+	// this is the gradient of the swell and not a decoration. The swell's own
+	// slope is held back a little: it is longer as well as taller, so it leans
+	// less than the chop does.
 	float2 Ripple;
-	Ripple.x = cos(Wv.x * 1.00 + Wv.y * 0.62 + Time * 1.15) * 1.00
-	         - cos(Wv.x * -0.74 + Wv.y * 1.31 + Time * 0.83) * 0.63
-	         + cos(Wv.x * 2.17 + Wv.y * -1.49 + Time * 1.61) * 0.35
-	         - cos(Wv.x * 3.91 + Wv.y * 3.07 + Time * 2.44) * 0.18 * Calm;
-	Ripple.y = cos(Wv.x * 1.00 + Wv.y * 0.62 + Time * 1.15) * 0.62
-	         + cos(Wv.x * -0.74 + Wv.y * 1.31 + Time * 0.83) * 1.11
-	         - cos(Wv.x * 2.17 + Wv.y * -1.49 + Time * 1.61) * 0.24
-	         - cos(Wv.x * 3.91 + Wv.y * 3.07 + Time * 2.44) * 0.14 * Calm;
+	Ripple.x = (cos(Ws.x * 1.00 + Ws.y * 0.62 + Time * 0.58) * 1.00
+	          - cos(Ws.x * -0.74 + Ws.y * 1.31 + Time * 0.42) * 0.63) * 0.75
+	         + (cos(Wc.x * 1.00 + Wc.y * 0.62 + Time * 1.15) * 1.00
+	          - cos(Wc.x * -0.74 + Wc.y * 1.31 + Time * 0.83) * 0.63
+	          + cos(Wc.x * 2.17 + Wc.y * -1.49 + Time * 1.61) * 0.35) * Calm;
+	Ripple.y = (cos(Ws.x * 1.00 + Ws.y * 0.62 + Time * 0.58) * 0.62
+	          + cos(Ws.x * -0.74 + Ws.y * 1.31 + Time * 0.42) * 1.11) * 0.75
+	         + (cos(Wc.x * 1.00 + Wc.y * 0.62 + Time * 1.15) * 0.62
+	          + cos(Wc.x * -0.74 + Wc.y * 1.31 + Time * 0.83) * 1.11
+	          - cos(Wc.x * 2.17 + Wc.y * -1.49 + Time * 1.61) * 0.24) * Calm;
 	// Flatter in the shallows: a ripple needs water under it, and a full
 	// swell running up onto a sandbank is the giveaway of a fake sea.
 	float Chop = lerp(0.18, 1.0, Deep);
