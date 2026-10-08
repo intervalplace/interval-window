@@ -73,6 +73,7 @@ EXPECT = {
     'mother-lode':              (1.5, 5.0),
     'gold-rock':                (1.0, 4.0),
     'iron-rock':                (1.0, 4.0),
+    'quick-rock':               (1.0, 4.0),
     'coal-rock':                (1.0, 4.0),
     'brimstone-vent':           (1.0, 3.5),
     'landmark.cave-mouth':      (2.0, 6.0),
