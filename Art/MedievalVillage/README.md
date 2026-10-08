@@ -1,4 +1,4 @@
-# Quaternius — Medieval Village Pack (Dec 2020)
+# Quaternius -- Medieval Village Pack (Dec 2020)
 
 Author: Quaternius (https://quaternius.com, https://www.patreon.com/quaternius)
 Pack page: https://quaternius.com/packs/medievalvillage.html

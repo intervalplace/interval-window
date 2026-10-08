@@ -1,4 +1,4 @@
-# Armour — CC0, from OpenGameArt
+# Armour -- CC0, from OpenGameArt
 
 The character kits in use carry no helm and no breastplate in their free tiers,
 so the head slot had no art at all. These three are CC0, each declared on its

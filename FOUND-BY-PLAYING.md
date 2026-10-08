@@ -194,7 +194,7 @@ back rather than standing in it for ever.
 The user asked for a mount while hauling. **The world has no horse**: the only
 match in the engine is `sawhorse`, and `cart` is a node type for what a dead
 hauler *spills*. The constitution names the trade RUNNER rather than carter
-deliberately — "this citizen walks the roads with what somebody paid them to
+deliberately -- "this citizen walks the roads with what somebody paid them to
 walk it with, under the one law in the world that lets anybody strike them for
 it (§11d)". A mount would remove the risk that rule exists to create. The load
 is drawn on the runner's back in the meantime; the horse is the user's call,
@@ -863,7 +863,7 @@ It was weird, and it was not a rod. Two faults:
 
 - **A citizen who wielded a tool was shown wearing nothing, and drew nothing
   in their hand.** Found by wielding an iron-hatchet and reading the panel:
-  the whole WORN block sat at "—" while the world's own record said
+  the whole WORN block sat at the empty placeholder while the world's own record said
   `equipment.weapon = {"item":"iron-hatchet","qty":1}`.
   An equipment slot holds a STACK, the same shape as an inventory slot, and
   both readers wanted a bare name. The panel asked `TryGetStringField` on an
@@ -1016,7 +1016,7 @@ It was weird, and it was not a rod. Two faults:
   the data flag `bAlignToRun`.
 - **Goblins drew as green cylinders** although `goblin → goblin_a` was already
   in `WILD_BEASTS`. The look was right; the **level actor** was holding a stale
-  copy, so the editor must be restarted *before* `apply.py` — the same trap
+  copy, so the editor must be restarted *before* `apply.py` -- the same trap
   that ate the roofs. `apply.py` now names any beast with art but no `Mobs` row.
 - **Every short walk reported itself blocked** and abandoned the remainder,
   while the tile it refused was walkable. Two causes at once: a deed takes 2–3
@@ -1032,17 +1032,17 @@ It was weird, and it was not a rod. Two faults:
 - **Hauling was invisible.** Taking a consignment empties the pack into a
   container the window could not see, which reads as having lost the goods.
   The panel shows `hauling N -> town` and the load is drawn on the back.
-- **`attackp` could not be filed**, so a citizen could never be struck — the
+- **`attackp` could not be filed**, so a citizen could never be struck -- the
   half of combat §11d is built on.
 - **The map knew nothing of terrain**, so a river read as open meadow and every
   route through it came back blocked from a tile the map had just called
   walkable. It now reads the bridge's terrain chunks.
 - **The map treated `plot` as a wall.** The engine documents making exactly
   this mistake: 1,269 of the island's 1,370 field plots were unreachable. Now
-  uses the world's own rule — everything bars a tile except
+  uses the world's own rule -- everything bars a tile except
   `smokerack, brewpot, watchfire, fire, market, cart, dedication, span, plot`.
 - **`MaxSteps` was 24** against the world's 512, and the leg logic gives up
-  after three runs — so no click could reach past 72 tiles and a journey needed
+  after three runs -- so no click could reach past 72 tiles and a journey needed
   an outside loop. Each extra deed also spends an interval of the daily
   allowance. Now matched to the world; one deed has since carried a citizen 59
   tiles.

@@ -1,4 +1,4 @@
-# Quaternius — Ships Pack
+# Quaternius -- Ships Pack
 
 Author: Quaternius (https://quaternius.com)
 Pack page: https://quaternius.com/packs/ships.html

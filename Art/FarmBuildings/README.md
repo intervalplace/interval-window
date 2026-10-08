@@ -1,4 +1,4 @@
-# Quaternius — Farm Buildings Pack (Sept 2018)
+# Quaternius -- Farm Buildings Pack (Sept 2018)
 
 Author: Quaternius (https://quaternius.com)
 Pack page: https://quaternius.com/packs/farmbuildings.html

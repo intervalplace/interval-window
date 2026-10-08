@@ -1,4 +1,4 @@
-# Quaternius — Ultimate Modular Ruins Pack (Aug 2021)
+# Quaternius -- Ultimate Modular Ruins Pack (Aug 2021)
 
 Author: Quaternius (https://quaternius.com)
 Pack page: https://quaternius.com/packs/ultimatemodularruins.html

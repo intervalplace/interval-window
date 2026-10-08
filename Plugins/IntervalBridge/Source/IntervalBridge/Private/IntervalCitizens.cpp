@@ -91,7 +91,7 @@ void UIntervalSplatWidget::Show(int32 Amount, const FLinearColor& Tint, float Th
 	// blow list for a swing that found nothing, and `window-web` shows it,
 	// because four blows of which two landed is a different thing from two
 	// blows and the difference is the whole texture of a flurry.
-	Figure->SetText(FText::FromString(Amount > 0 ? FString::FromInt(Amount) : TEXT("\u2014")));
+	Figure->SetText(FText::FromString(Amount > 0 ? FString::FromInt(Amount) : TEXT("-")));
 
 	// Up, and out. Fading on a curve rather than linearly so it is fully
 	// legible for most of its life and then goes quickly, instead of spending
