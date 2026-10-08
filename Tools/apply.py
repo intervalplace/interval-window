@@ -2140,11 +2140,31 @@ have['Worn'] = worn
 # Both tables are word -> (mesh, scale); the only difference is which kit the
 # mesh lives in. The mesh carries its own materials and its own construction,
 # so both the material and the assembled primitives are cleared.
+# A WORD WITH A MESH AND NO ROW WAS DROPPED IN SILENCE.
+#
+# This loop only ever DECORATED a row that already existed, so a word named
+# here but absent from the asset's table fell straight through the `continue`
+# and kept no mesh at all. `quick-rock` was exactly that: thirteen of them
+# standing in the Wilds, a minable earthcraft node worth 23 experience, and
+# the window drew nothing on the tile. It had a correct entry in NATURE_PROPS
+# the whole time -- `Rock_Medium_1` at 0.90 -- and this line threw it away.
+#
+# The window had been saying so all along, once per rebuild: "the world says
+# 'quick-rock' is standing here and this window has no mesh for it". The
+# report is worth trusting over any reading of these tables.
+#
+# So a missing row is now MADE rather than skipped, patterned on the sibling
+# named in KIN where there is one. That matters for the flags this file never
+# sets -- `bHideWhenDepleted` above all -- which a rock has to share with the
+# other rocks or it stays standing after it has been mined out.
+KIN = {
+    'quick-rock': 'iron-rock',
+}
 for table, where in ((NATURE_PROPS, WOOD), (PROP_PROPS, GEAR)):
     for word, (mesh, scale) in table.items():
         k = props.get(word)
         if not k:
-            continue
+            k = props[word] = copy.deepcopy(props.get(KIN.get(word, ''), {}))
         k['mesh'] = {'refPath': where(mesh)}
         k['material'] = None
         k['parts'] = []

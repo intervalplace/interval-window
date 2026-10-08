@@ -40,3 +40,21 @@ So after editing a generator: restart the pillar, then restart the bridge,
 then take the picture. The same goes for reading a change back with
 `groundKindAt` or `isWater` from a script, which loads its own fresh copy and
 will disagree with a window that has not been restarted.
+
+## The window already says what it cannot draw
+
+`AIntervalStructures` carries `bReportUndrawnKinds`, true by default, and logs
+once per word per rebuild:
+
+    the world says 'quick-rock' is standing here and this window has no mesh for it
+
+So the list of words the world stands up and the window draws as nothing is a
+grep of `/tmp/ue.log`, not a reading of the tables in `parts.py`:
+
+    grep "no mesh for it" /tmp/ue.log | sort -u
+
+Reading the tables instead got it wrong twice in the same hour: it missed
+`NATURE_PROPS` entirely, and it reported `palisade` as undrawn when the
+`Palisades` table had it all along. The log named exactly one word and was
+right. This is the standing rule about testing through the window's own
+interface, in the one place where the window is already doing the test.
