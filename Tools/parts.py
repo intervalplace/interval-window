@@ -17,6 +17,9 @@ def M(n): return {'refPath': f'/Game/Interval/Materials/{n}.{n}'}
 def GEAR_PATH(n): return '/Game/Interval/Props/%s.%s' % (n, n)
 STONE,TIMBER,THATCH,ROCK,CLOTH,CANOPY = (M(x) for x in
     ('MI_PropStone','MI_PropTimber','MI_PropThatch','MI_PropRock','MI_PropCloth','MI_PropCanopy'))
+# The dark inside an opening. See MI_PropDark in make_prop.py for why a hole
+# needed a material of its own rather than a darker rock.
+DARK = M('MI_PropDark')
 
 def P(mesh, mat, sx, sy, sz, ox=0.0, oy=0.0, oz=0.0, pitch=0.0, yaw=0.0, roll=0.0, shadow=True):
     return {'mesh': {'refPath': mesh}, 'material': mat,
@@ -502,9 +505,36 @@ LANDMARKS.update({
   'daub-mark':      K(CUBE, STONE, 0.60, 0.06, 0.80, 96, 360, 0.10),
   'peat-cut':       K(CUBE, ROCK, 1.80, 1.20, 0.30, -6, 0, 0.10),
   'slag-lump':      K(SPH, ROCK, 0.70, 0.70, 0.42, 14, 360, 0.24),
-  'shot-hole':      K(CYL, ROCK, 0.80, 0.80, 0.24, -6, 360, 0.18),
-  'cave-mouth':     K(SPH, ROCK, 2.40, 1.60, 1.90, 10, 360, 0.14,
-                      [P(SPH, ROCK, 1.30, 0.90, 1.20, oy=-40, oz=0)]),
+  # A SHOT-HOLE IS THE HOLE, not the rock it was drilled in. It was a squat
+  # rock cylinder and so it was a pebble. The rim stays and the bore is dark.
+  'shot-hole':      K(CYL, ROCK, 0.80, 0.80, 0.24, -6, 360, 0.18,
+                      [P(CYL, DARK, 0.44, 0.44, 0.09, oz=15, shadow=False)]),
+  # ---- A CAVE MOUTH IS AN OPENING. IT IS NOT A BOULDER ----
+  #
+  # This was two rock spheres, and `NATURE_PROPS` then threw even those away
+  # for `Rock_Medium_2` at 1.60: a two and a half metre boulder sitting in the
+  # crags, seven of them. The sixth time the pattern in the standing stone's
+  # note has turned up, and the first time the word was not a rock at all.
+  #
+  # What makes a cave a cave is the DARK, and from a camera looking straight
+  # down a brow of stone over the entrance would hide the only part worth
+  # seeing. So it is built open to the sky: a back wall of rock with two arms
+  # coming forward, and the floor between them in `MI_PropDark`. From above
+  # that is a horseshoe of stone around a hole, which is what somebody standing
+  # on the path would call a cave mouth.
+  # AND IT IS BUILT OF THE SAME ROCK AS THE ROCKS AROUND IT. Drawn first as
+  # three smooth spheres in `MI_PropRock`, it read as putty set down among the
+  # faceted crags: the shape was right and the material was worse than the
+  # boulder it replaced. The kit's own rock is what every other stone in the
+  # crags is made of, so the opening is made of it too, and only the dark in
+  # the middle is this project's. `Rock_Medium_*` is 3.4 m at scale 1, which
+  # is where these numbers come from.
+  'cave-mouth':     K(WOOD('Rock_Medium_2'), None, 0.62, 0.62, 0.78, 0, 360, 0.10,
+                      [P(CYL, DARK, 1.00, 1.00, 0.10, oy=104, oz=7, shadow=False),
+                       P(WOOD('Rock_Medium_1'), None, 0.38, 0.38, 0.50,
+                         ox=-82, oy=88, oz=-2, yaw=40),
+                       P(WOOD('Rock_Medium_3'), None, 0.36, 0.36, 0.48,
+                         ox=82, oy=88, oz=-2, yaw=215)]),
   'wellspring':     K(CYL, ROCK, 1.30, 1.30, 0.30, 12, 360, 0.10,
                       [P(CYL, STONE, 1.00, 1.00, 0.06, oz=30)]),
   # --- water and the edge of it ---
@@ -3201,7 +3231,10 @@ NATURE_PROPS = {
   'landmark.fallen-stone':   ('Rock_Medium_1', 1.10),
   'landmark.glass-stone':    ('Rock_Medium_2', 0.80),
   'landmark.cut-face':       ('Rock_Medium_1', 1.30),
-  'landmark.cave-mouth':     ('Rock_Medium_2', 1.60),
+  # 'landmark.cave-mouth' IS NOT HERE. It was a boulder for the same reason
+  # 'landmark.rubble-heap' was, and for a worse one: the others in this group
+  # are genuinely rocks, and a cave mouth is a hole. See LANDMARKS above,
+  # which builds it as an opening and owns the word now.
   'landmark.salt-lick':      ('Rock_Medium_1', 0.55),
   'landmark.stone-heap':     ('Rock_Medium_3', 0.85),
   'landmark.ore-heap':       ('Rock_Medium_1', 0.75),

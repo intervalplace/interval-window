@@ -57,6 +57,13 @@ KIND = {
     'MI_PropCloth':    (0.330, 0.130, 0.098, 0.78,  0.0, 0.07,  0.0),
     'MI_PropCanopy':   (0.044, 0.082, 0.040, 0.96,  0.0, 0.14,  0.0),
     'MI_PropHedge':    (0.072, 0.128, 0.056, 0.95,  0.0, 0.14,  0.0),
+    # THE DARK INSIDE AN OPENING, which is not a colour anything here wore.
+    # A cave mouth is a hole in a hillside and the hole is the whole point of
+    # it: drawn in rock it is a boulder, which is exactly what it was. Near
+    # black, fully rough so it catches no sun at any hour, and grainy enough
+    # that it is not a sticker. It is never lit from inside, so it holds its
+    # dark whatever the weather does to the stone around it.
+    'MI_PropDark':     (0.016, 0.015, 0.014, 1.00,  0.0, 0.06,  0.0),
     'MI_ScatterGrass': (0.225, 0.300, 0.115, 0.95,  0.0, 0.13,  0.0),
     'MI_ScatterHeath': (0.200, 0.150, 0.098, 0.95,  0.0, 0.13,  0.0),
     'MI_ScatterReed':  (0.235, 0.245, 0.125, 0.95,  0.0, 0.13,  0.0),
