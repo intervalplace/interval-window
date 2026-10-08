@@ -15,12 +15,24 @@ DerivedDataCache/
 Saved/
 Build/Receipts/
 
-# THE CONTENT AND THE ART ARE NOT HERE YET, and that is a decision to revisit
-# rather than a judgement that they do not matter. Content/ is 857 MB of
-# .uasset and Art/ is 1.7 GB of source meshes: git without LFS handles neither
-# well, and a repository that takes ten minutes to clone is a repository nobody
-# clones. The Art READMEs ARE tracked, because the CC0 licence record is the
-# one thing in that directory that cannot be downloaded again.
+# THE CONTENT AND THE ART ARE NOT HERE, AND ONE OF THE REASONS IS BINDING.
+#
+# The soft reason: Content/ is 857 MB of .uasset and Art/ is 1.7 GB of source
+# meshes. Git without LFS handles neither well, and a repository that takes ten
+# minutes to clone is a repository nobody clones.
+#
+# THE HARD REASON, which is not a decision to revisit: Art/Bestiary is under
+# the Quaternius Asset License and NOT CC0. It allows shipping a built client
+# containing the models and forbids redistributing the asset files themselves,
+# so a repository carrying them would be redistributing them. Content/ holds
+# the same models in imported form and is no different. Anybody tempted to put
+# either directory back must read Art/Bestiary/README.md first and take that
+# pack out, or the repository breaks a licence the moment it is pushed.
+#
+# The READMEs ARE tracked, and they are the whole point of the exception: the
+# licence record is the one thing in that directory that cannot be downloaded
+# again, and the pack whose licence matters most is the one whose record would
+# otherwise never reach the repository.
 Content/
 Audio/
 Art/**
