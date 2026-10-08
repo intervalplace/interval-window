@@ -25,7 +25,8 @@ The author is Mats Julner. Commits are authored and committed as them.
   `ForceDay`, `ForceRain` and `ForceCloud` all to -1, and verify it.
 - `identities/` IS PEOPLE. A citizen is a private key; anybody who reads one
   holds that citizen for ever. Never `git add -A` anywhere those files live,
-  and never add a key file by hand.
+  and never add a key file by hand. AND `.gitignore` DOES NOT SAVE YOU: see
+  below.
 - Refounding is an acceptable cost. Changing geography requires one.
 
 ## Changing the generator: restart BOTH
@@ -58,3 +59,32 @@ Reading the tables instead got it wrong twice in the same hour: it missed
 `Palisades` table had it all along. The log named exactly one word and was
 right. This is the standing rule about testing through the window's own
 interface, in the one place where the window is already doing the test.
+
+## An ignore rule does not untrack what is already tracked
+
+`interval-bridge/unreal-key.json` held a playerId and a privateKey and sat on
+the PUBLIC remote through many pushes. Its own `note` field read "THIS FILE IS
+THE CITIZEN. Back it up; do not commit it." `.gitignore` had listed
+`unreal-key*.json` the whole time.
+
+Neither helped, because the rule was written after the file was committed, and
+an ignore rule has no effect on a path git is already tracking. Git carried it
+past the rule on every push and nothing ever said a word.
+
+So `.gitignore` answers "what must not be ADDED" and is not evidence about
+what is in the repository. The question to ask is what is CARRIED:
+
+    git ls-files | ... and read them
+
+`interval-bridge/test/nokeys.test.mjs` now does exactly that on every run, and
+matches the key VALUE rather than the field name, because `engine.js` and half
+the tools say `privateKey` constantly and must go on doing so.
+
+A published key cannot be unpublished. Untracking stops the next push; it does
+not undo the ones before it, and only a history rewrite plus abandoning the
+citizen comes close. Treat any key that has ever been committed as burned.
+
+AND WHEN REMOVING ONE, DO NOT PASS A PATHSPEC TO `git commit`. `git commit
+<path>` ignores a staged `git rm --cached` and commits the working tree
+instead, which publishes the file again rather than removing it. Stage the
+removal, then commit with no pathspec at all.
