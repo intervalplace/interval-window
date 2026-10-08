@@ -43,7 +43,8 @@ rebuilt from something else.
   `cap.py` photographs the viewport, `sim.sh` and `play.sh` start a session
 - `Tools/ground.hlsl`, `Tools/wall.hlsl` the ground and the cutaway
 - `Art/*/README.md` where each third-party asset came from and under what
-  licence. All of it is CC0, and the licence was read from the asset's own page
+  licence, read from the asset's own page rather than inferred from a search
+  filter
 
 ## What is not in here, and why
 
@@ -54,7 +55,18 @@ on its own yet: it is the written part, kept because it is the part that cannot
 be downloaded again. `.gitignore` says the same thing line by line, with the
 reason beside each one.
 
+There is a second reason, and it is the binding one. Not every pack in `Art/`
+is CC0. The Bestiary kit is licensed under the Quaternius Asset License, which
+allows using and modifying the models and shipping a built game that contains
+them, with no fee or credit owed, but forbids redistributing the asset files
+themselves. A repository carrying those raw files would be redistributing them.
+So `Art/` stays out, and this is not a decision that size alone could reverse.
+
 ## Licence
 
-Third-party art is CC0, recorded per asset in `Art/*/README.md`. The written
-work here is by Mats Julner.
+The written work here is by Mats Julner.
+
+Most of the third-party art is CC0, recorded per pack in `Art/*/README.md` with
+the licence read from the asset's own page. The Bestiary kit is the exception
+noted above and is NOT CC0. Nothing in this project should be described as CC0
+wholesale.
