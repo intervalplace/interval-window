@@ -91,6 +91,50 @@ def makeable():
     return words
 
 
+def unresolved():
+    """Asset references in the look that no file on disk answers.
+
+    A row can name every mesh correctly and still draw nothing if the mesh is
+    not there: a kit moved, a pack reimported under another name, an asset
+    deleted while the row that wanted it stayed. That is the same silent
+    failure as a missing row and it does not show up in any word list, so it
+    is asked here as well.
+    """
+    t = _rpc.call(OBJ, 'get_properties',
+                  {'instance': {'refPath': LOOK}, 'properties': TABLES})
+    d = json.loads(json.loads(t)['returnValue'])
+    refs = {}
+
+    def walk(word, o):
+        if isinstance(o, dict):
+            rp = o.get('refPath')
+            if isinstance(rp, str) and rp.startswith('/Game/'):
+                refs.setdefault(rp, set()).add(word)
+            for v in o.values():
+                walk(word, v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(word, v)
+
+    for table in TABLES:
+        v = d.get(table)
+        if isinstance(v, dict):
+            for w, row in v.items():
+                walk('%s:%s' % (table, w), row)
+        elif isinstance(v, list):
+            for i, row in enumerate(v):
+                walk('%s[%d]' % (table, i), row)
+
+    content = os.path.join(os.path.dirname(SP), 'Content')
+    missing = {}
+    for rp in refs:
+        rel = rp.split('.')[0][len('/Game/'):]
+        if not any(os.path.exists(os.path.join(content, rel + e))
+                   for e in ('.uasset', '.umap')):
+            missing[rp] = sorted(refs[rp])
+    return len(refs), missing
+
+
 def main():
     can_draw = drawable()
     can_make = makeable()
@@ -101,10 +145,12 @@ def main():
     # is handled, so nobody looks for the new word that replaced it.
     dead = sorted(w for w in drawable(bare=False, tables=WORD_TABLES)
                   if '.' not in w and w not in can_make and w not in WINDOW_ONLY)
-    print('the window can draw %d words' % len(can_draw))
-    if not missing and not dead:
+    seen, gone = unresolved()
+    print('the window can draw %d words out of %d assets' % (len(can_draw), seen))
+    if not missing and not dead and not gone:
         print('every word the world can make has something to draw it,')
-        print('and the window answers for nothing the world cannot make')
+        print('the window answers for nothing the world cannot make,')
+        print('and every asset it names is on disk')
         return 0
     if missing:
         print('THE WORLD CAN MAKE THESE AND THE WINDOW DRAWS NOTHING:')
@@ -114,6 +160,11 @@ def main():
         print('THE WINDOW ANSWERS FOR THESE AND THE WORLD CANNOT MAKE THEM:')
         for w in dead:
             print('    %-20s a rename that only went half way?' % w)
+    if gone:
+        print('THE LOOK NAMES THESE ASSETS AND THERE IS NO SUCH FILE:')
+        for rp, users in sorted(gone.items()):
+            print('    %s' % rp)
+            print('        wanted by: %s' % ', '.join(users[:6]))
     return 1
 
 
