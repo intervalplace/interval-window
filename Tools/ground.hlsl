@@ -971,29 +971,56 @@ if (Code == 11 || Code == 12)
 	// from far away, and a metre-and-a-half CHOP added on top of it, faded out
 	// with distance because below a pixel it is not detail, it is moire. Adding
 	// detail in cannot shift what is underneath, so nothing rings.
-	float2 Ws = W.xy * 0.013;
-	float2 Wc = W.xy * 0.045;
+	// ---- AND THE REASON IT STILL LOOKED LIKE A GRID ----
+	//
+	// Sinusoids interfere into lattices. That is what they do, and no number of
+	// them cures it: two trains give a coarse lattice, four give a finer one,
+	// and every version of this that answered the fault by adding another wave
+	// made the mesh tighter rather than making it go away. Reported twice,
+	// correctly, by somebody looking at the water rather than at the code.
+	//
+	// So the waves are not changed; the WATER UNDER THEM is pushed about. A
+	// slow, very long offset, fifteen to thirty metres across, is added to the
+	// coordinate the waves are read at. Every crest then wanders, no two parts
+	// of the sea are in step, and the pattern has no cell to repeat: the same
+	// trains, read off a surface that is no longer flat graph paper.
+	//
+	// This is cheap. It is four more sines at a frequency low enough that they
+	// cost nothing in detail, and it does the work that twice as many wave
+	// trains could not.
+	float2 Warp;
+	Warp.x = sin(W.x * 0.0041 + W.y * 0.0027 + Time * 0.21)
+	       + sin(W.x * -0.0019 + W.y * 0.0052 + Time * 0.13) * 0.8;
+	Warp.y = sin(W.x * 0.0033 + W.y * -0.0045 + Time * 0.17)
+	       + sin(W.x * 0.0058 + W.y * 0.0021 + Time * 0.09) * 0.8;
+	float2 Wrp = W.xy + Warp * 210.0;
+
+	// A five metre SWELL, always there, which is what survives distance; and a
+	// metre-and-a-half CHOP on top, faded out with distance because below a
+	// pixel it is not detail, it is moire. Both read off the warped position.
+	//
+	// The phase is never scaled by anything the camera knows. An earlier cut
+	// scaled the WAVELENGTH by distance and the sea came out in concentric
+	// rings centred on the eye, which travelled with it.
+	float2 Ws = Wrp * 0.013;
+	float2 Wc = Wrp * 0.045;
 	float SwellL = sin(Ws.x * 1.00 + Ws.y * 0.62 + Time * 0.58)
 	             + sin(Ws.x * -0.74 + Ws.y * 1.31 + Time * 0.42) * 0.85;
 	float SwellC = sin(Wc.x * 1.00 + Wc.y * 0.62 + Time * 1.15)
-	             + sin(Wc.x * -0.74 + Wc.y * 1.31 + Time * 0.83) * 0.85
-	             + sin(Wc.x * 2.30 + Wc.y * 1.90 + Time * 1.90) * 0.35;
+	             + sin(Wc.x * -0.74 + Wc.y * 1.31 + Time * 0.83) * 0.85;
 	float Swell = SwellL + SwellC * Calm;
 	// Each coefficient is the wave's DIRECTION times its amplitude, because
-	// this is the gradient of the swell and not a decoration. The swell's own
-	// slope is held back a little: it is longer as well as taller, so it leans
-	// less than the chop does.
+	// this is the gradient of the swell and not a decoration. The swell leans
+	// less than the chop: it is longer as well as taller.
 	float2 Ripple;
 	Ripple.x = (cos(Ws.x * 1.00 + Ws.y * 0.62 + Time * 0.58) * 1.00
 	          - cos(Ws.x * -0.74 + Ws.y * 1.31 + Time * 0.42) * 0.63) * 0.75
 	         + (cos(Wc.x * 1.00 + Wc.y * 0.62 + Time * 1.15) * 1.00
-	          - cos(Wc.x * -0.74 + Wc.y * 1.31 + Time * 0.83) * 0.63
-	          + cos(Wc.x * 2.17 + Wc.y * -1.49 + Time * 1.61) * 0.35) * Calm;
+	          - cos(Wc.x * -0.74 + Wc.y * 1.31 + Time * 0.83) * 0.63) * Calm;
 	Ripple.y = (cos(Ws.x * 1.00 + Ws.y * 0.62 + Time * 0.58) * 0.62
 	          + cos(Ws.x * -0.74 + Ws.y * 1.31 + Time * 0.42) * 1.11) * 0.75
 	         + (cos(Wc.x * 1.00 + Wc.y * 0.62 + Time * 1.15) * 0.62
-	          + cos(Wc.x * -0.74 + Wc.y * 1.31 + Time * 0.83) * 1.11
-	          - cos(Wc.x * 2.17 + Wc.y * -1.49 + Time * 1.61) * 0.24) * Calm;
+	          + cos(Wc.x * -0.74 + Wc.y * 1.31 + Time * 0.83) * 1.11) * Calm;
 	// Flatter in the shallows: a ripple needs water under it, and a full
 	// swell running up onto a sandbank is the giveaway of a fake sea.
 	float Chop = lerp(0.18, 1.0, Deep);
