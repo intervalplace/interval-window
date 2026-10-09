@@ -545,6 +545,29 @@ public:
 	float ForceDay = -1.f;
 
 	/**
+	 * ---- WHAT DREW THIS TILE ----
+	 *
+	 * Set both to a tile and the window answers in the log: every instanced
+	 * mesh standing within two tiles of it, by mesh name and by the component
+	 * that holds it, then puts them back to -1.
+	 *
+	 * It exists because finding out what a thing on the ground WAS had been
+	 * done by reading coordinates off a photograph, and that was wrong more
+	 * often than right: it named a campfire, a grove, the inside of a
+	 * building and a sea beach before naming anything correctly. A window
+	 * knows exactly what it drew and can simply be asked.
+	 *
+	 * On the look rather than on an actor because the look is the one thing
+	 * a tool can write that a running Simulate session reads, which is the
+	 * same road `ForceDay` takes.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interval|Debug")
+	float WhatDrewX = -1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interval|Debug")
+	float WhatDrewY = -1.f;
+
+	/**
 	 * THE MOON'S DISC: a plain sphere, lit by the sun like anything else.
 	 *
 	 * Left empty there is no disc and the moonlight still falls, which is the

@@ -58,7 +58,7 @@ namespace
 	 * and not from the border's BrushColor -- set only the second and the
 	 * panel comes out white.
 	 */
-	void Round(FSlateBrush& Brush, float Radius, const FLinearColor& Tint)
+	void MenuRound(FSlateBrush& Brush, float Radius, const FLinearColor& Tint)
 	{
 		Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
 		Brush.OutlineSettings.CornerRadii = FVector4(Radius, Radius, Radius, Radius);
@@ -148,13 +148,13 @@ TSharedRef<SWidget> UIntervalMenuWidget::RebuildWidget()
 		// panels are made of.
 		Plate = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
 		Plate->SetBrushColor(MenuBand);
-		Round(Plate->Background, 6.f, MenuBand);
+		MenuRound(Plate->Background, 6.f, MenuBand);
 		Plate->SetPadding(FMargin(2.f));
 		Plate->SetVisibility(ESlateVisibility::Collapsed);
 
 		UBorder* Inside = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
 		Inside->SetBrushColor(MenuOak);
-		Round(Inside->Background, 5.f, MenuOak);
+		MenuRound(Inside->Background, 5.f, MenuOak);
 		Inside->SetPadding(FMargin(0.f, 4.f, 0.f, 5.f));
 
 		UVerticalBox* Column = WidgetTree->ConstructWidget<UVerticalBox>(

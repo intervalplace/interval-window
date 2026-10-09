@@ -138,7 +138,7 @@ namespace
 	 * grey while the code still plainly said ink. Setting both is the fix, and
 	 * putting both in one call is what stops it happening again.
 	 */
-	void Round(FSlateBrush& Brush, float Radius, const FLinearColor& Tint)
+	void HudRound(FSlateBrush& Brush, float Radius, const FLinearColor& Tint)
 	{
 		Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
 		Brush.OutlineSettings.CornerRadii = FVector4(Radius, Radius, Radius, Radius);
@@ -155,10 +155,10 @@ namespace
 		// very round one reads as a phone; five pixels is the difference
 		// between a rectangle and a made thing, and is what was asked for --
 		// "a little more rounded in the edges. Not too much but a little".
-		Round(Edge->Background, 6.f, HudBand);
+		HudRound(Edge->Background, 6.f, HudBand);
 		UBorder* Face = Tree->ConstructWidget<UBorder>(UBorder::StaticClass());
 		Face->SetBrushColor(HudOak);
-		Round(Face->Background, 5.f, HudOak);
+		HudRound(Face->Background, 5.f, HudOak);
 		Face->SetPadding(FMargin(Pad, Pad * 0.75f, Pad, Pad * 0.75f));
 		Face->AddChild(Inside);
 		Edge->AddChild(Face);

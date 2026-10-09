@@ -742,6 +742,79 @@ void AIntervalStructures::Rebuild(const FIntervalFrame& Frame)
 	UE_LOG(LogIntervalStructures, Log, TEXT("tick %lld: drew %d of %d things standing, %d lying"),
 		Frame.Tick, Drawn, Frame.Nodes.Num(), Lying);
 
+	// ---- WHAT DREW THIS TILE ----
+	//
+	// Asked by writing a tile into the look; answered here and put back. See
+	// the note over `WhatDrewX` in IntervalLook.h for why it is asked that way
+	// and why it exists at all: reading a thing's identity off a photograph
+	// named four wrong things before it named a right one, and the window has
+	// known the answer the whole time.
+	if (Chosen && Chosen->WhatDrewX >= 0.f && Chosen->WhatDrewY >= 0.f)
+	{
+		const int32 AskX = FMath::RoundToInt(Chosen->WhatDrewX);
+		const int32 AskY = FMath::RoundToInt(Chosen->WhatDrewY);
+		// A BLOCK, NOT A TILE. Asking one tile means knowing which tile to
+		// ask, and knowing that has been the whole difficulty: a tile read
+		// off a photograph has been wrong four times out of five. A block
+		// forty tiles square is the frame a survey shot covers, so one
+		// question answers for everything in the picture.
+		const FVector Centre = UIntervalGeometry::TileToWorld(AskX, AskY);
+		const float Reach = UIntervalGeometry::TileSize * 20.f;
+		UE_LOG(LogIntervalStructures, Warning,
+			TEXT("WHATDREW block around tile %d,%d (%.0f,%.0f), 40 tiles square:"),
+			AskX, AskY, Centre.X, Centre.Y);
+
+		// mesh name -> how many, and where one of them stands
+		TMap<FString, int32> Tally;
+		TMap<FString, FVector> Where;
+		TMap<FString, FString> Owner;
+		int32 Found = 0;
+		for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+		{
+			TArray<UInstancedStaticMeshComponent*> Here;
+			It->GetComponents(Here);
+			for (UInstancedStaticMeshComponent* Pool : Here)
+			{
+				if (!Pool || !Pool->GetStaticMesh()) { continue; }
+				const FString Mesh = Pool->GetStaticMesh()->GetName();
+				const int32 Count = Pool->GetInstanceCount();
+				for (int32 i = 0; i < Count; ++i)
+				{
+					FTransform T;
+					if (!Pool->GetInstanceTransform(i, T, true)) { continue; }
+					const FVector P = T.GetLocation();
+					if (FMath::Abs(P.X - Centre.X) > Reach
+					 || FMath::Abs(P.Y - Centre.Y) > Reach) { continue; }
+					++Found;
+					Tally.FindOrAdd(Mesh)++;
+					if (!Where.Contains(Mesh))
+					{
+						Where.Add(Mesh, P);
+						Owner.Add(Mesh, Pool->GetName());
+					}
+				}
+			}
+		}
+		Tally.ValueSort([](int32 A, int32 B) { return A > B; });
+		for (const TPair<FString, int32>& Row : Tally)
+		{
+			const FVector P = Where[Row.Key];
+			UE_LOG(LogIntervalStructures, Warning,
+				TEXT("WHATDREW   %-26s x%-5d  one at tile %d,%d  component=%s"),
+				*Row.Key, Row.Value,
+				FMath::FloorToInt(P.X / UIntervalGeometry::TileSize),
+				FMath::FloorToInt(P.Y / UIntervalGeometry::TileSize),
+				*Owner[Row.Key]);
+		}
+		UE_LOG(LogIntervalStructures, Warning,
+			TEXT("WHATDREW %d instance(s) of %d distinct mesh(es)"), Found, Tally.Num());
+
+		// Put the question back, so one write asks exactly once.
+		UIntervalLook* Mutable = const_cast<UIntervalLook*>(Chosen);
+		Mutable->WhatDrewX = -1.f;
+		Mutable->WhatDrewY = -1.f;
+	}
+
 	for (auto It = Figures.CreateIterator(); It; ++It)
 	{
 		if (FiguresSeen.Contains(It.Key()))
