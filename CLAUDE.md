@@ -88,3 +88,37 @@ AND WHEN REMOVING ONE, DO NOT PASS A PATHSPEC TO `git commit`. `git commit
 <path>` ignores a staged `git rm --cached` and commits the working tree
 instead, which publishes the file again rather than removing it. Stage the
 removal, then commit with no pathspec at all.
+
+## Scarcity is the design: the world makes Schelling points
+
+One anvil. One market town holding most of the stalls. Seven trade stalls on
+the whole island, one of each kind in `STALL_KINDS`, because a stall is a
+world institution rather than a shop: the arms of Millbrook, the fishmonger of
+Eastmere. A store sells nothing at all, deliberately, and `STORE_SELLS` is an
+empty table on purpose.
+
+Most games put a resource everywhere, and the result is that nobody ever has a
+reason to be in the same place as anybody else. Here thin provision is the
+point, and it is load-bearing. If everybody who needs an anvil has to walk to
+the same anvil, the anvil becomes somewhere people meet. A place everybody
+knows that everybody else knows about is a Schelling point, and a world with
+no owner has nothing else to gather people with: no matchmaker, no lobby, no
+party finder, no event feed. The geography has to do it, so the geography is
+built to.
+
+What this means for anybody working here:
+
+- Do NOT read a town with few trades as a gap. Count it, check it against the
+  roster, and leave it alone. Seven stalls for seven stall kinds is the design
+  working, not failing.
+- Adding a second anvil, or a stall in every town, or a shop that sells what
+  the market town sells, costs the world a meeting place. That is a far bigger
+  loss than the convenience is worth, and it cannot be undone by adding
+  something else later.
+- The keeper callings are not a counter-example. Giving the people in a town
+  something to BE costs nothing and disperses nobody: it is texture. Giving
+  every town somewhere to BUY is dispersal. The test is whether the change
+  removes a reason to travel.
+
+This is a rule about the world's purpose rather than its art, so it outranks
+any tidiness argument for filling a table in.
