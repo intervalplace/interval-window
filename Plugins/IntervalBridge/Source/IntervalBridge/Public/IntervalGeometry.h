@@ -231,8 +231,19 @@ public:
 			0.f, static_cast<float>(L.H - 1) - KINDA_SMALL_NUMBER);
 		const int32 IX = FMath::FloorToInt(FX);
 		const int32 IY = FMath::FloorToInt(FY);
-		const float TX = FX - IX;
-		const float TY = FY - IY;
+		// EASED, LIKE EVERY OTHER LATTICE IN THIS FILE.
+		//
+		// `Ease` sits twenty lines up with the note "so an octave has no
+		// creases along its lattice", and `Swell` has used it since it was
+		// written. This, the one lattice that carries the REAL height field,
+		// was reading it straight: linear between samples, so every boundary
+		// of the four-tile grid was a crease in the land.
+		//
+		// That is half of what was reported as pale slabs lying in the
+		// woods. A plateau with a cut edge reads as a laid thing; the same
+		// plateau with a rounded edge reads as a rise.
+		const float TX = Ease(FX - IX);
+		const float TY = Ease(FY - IY);
 		auto At = [&L](int32 X, int32 Y)
 		{
 			return static_cast<float>(L.V[Y * L.W + X]);
@@ -361,8 +372,34 @@ public:
 		// the houses is graded the same as the street, which is what stops the
 		// patchwork. The ring in `TownAt` walks this from 1 back to 0.5 rather
 		// than stepping, so a town has no lip around it.
+		// ---- AND A HAND'S BREADTH OF RELIEF, SO A PLATEAU IS NOT A TABLE ----
+		//
+		// The height field is a BYTE every four tiles. Wherever two
+		// neighbouring samples land on the same byte, the interpolation
+		// between them is exactly flat, and what the eye gets is an eight
+		// metre table standing a finger above the grass: at noon its top
+		// faces the sun and reads as a pale slab, and under a low sun it
+		// throws a shadow. They are all over the open country and they were
+		// taken for laid stone.
+		//
+		// Easing the lattice rounded their edges and could not help with the
+		// middle, because a flat thing interpolated smoothly is still flat.
+		// What is missing is detail finer than the field can hold, so it is
+		// put back here: two octaves, together under one byte of the field's
+		// own resolution, which means this can never change the shape of a
+		// hill. It only stops the level places being mathematically level.
+		//
+		// NOT IN A TOWN, and not on a way or a floor, which return above.
+		// Ground people have levelled is supposed to be flat; that is the
+		// whole of what `Town` is for, and putting ripples back between the
+		// houses would undo it.
+		const float Micro = (Swell(static_cast<float>(TileX),
+		                           static_cast<float>(TileY), 7.f) * 0.90f
+		                   + Swell(static_cast<float>(TileX),
+		                           static_cast<float>(TileY), 3.f) * 0.35f)
+		                  * PerUnit * Relief() * (1.f - Town);
 		return FMath::Lerp(LandAt(TileX, TileY), Base,
-			FMath::Lerp(0.5f, 1.0f, Town));
+			FMath::Lerp(0.5f, 1.0f, Town)) + Micro;
 	}
 
 	/**
