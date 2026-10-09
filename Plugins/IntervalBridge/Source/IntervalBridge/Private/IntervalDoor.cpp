@@ -13,12 +13,18 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogIntervalDoor, Log, All);
 
-namespace
+// NAMED, NOT ANONYMOUS. Unity builds paste several .cpp files into one
+// translation unit, and two anonymous namespaces in one unit are the SAME
+// namespace: this file and IntervalGate.cpp both call a colour Ink and a
+// colour Quiet, and the plugin stopped compiling the moment the two landed
+// in the same blob. A name each, and `using` so no use site changes.
+namespace DoorPalette
 {
 	const FLinearColor Ink(0.92f, 0.90f, 0.82f, 1.f);
 	const FLinearColor Quiet(0.68f, 0.66f, 0.60f, 1.f);
 	const FLinearColor Warn(0.92f, 0.56f, 0.44f, 1.f);
 }
+using namespace DoorPalette;
 
 UTextBlock* UIntervalDoorWidget::AddRow(UVerticalBox* Box, const FLinearColor& Colour, int32 Size)
 {

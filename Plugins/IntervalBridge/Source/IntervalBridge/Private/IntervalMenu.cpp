@@ -19,7 +19,10 @@
 #include "Engine/World.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 
-namespace
+// NAMED, NOT ANONYMOUS: see the note in IntervalDoor.cpp. Two anonymous
+// namespaces in one unity blob are one namespace, and several of these
+// files name a colour Ink.
+namespace MenuPalette
 {
 	// ---- THE SAME BOARD AS EVERYTHING ELSE ----
 	//
@@ -57,6 +60,7 @@ namespace
 		Brush.TintColor = FSlateColor(Tint);
 	}
 }
+using namespace MenuPalette;
 
 // ---------------------------------------------------------------------------
 

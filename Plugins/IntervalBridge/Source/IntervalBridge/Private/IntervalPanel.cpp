@@ -23,7 +23,10 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 
-namespace
+// NAMED, NOT ANONYMOUS: see the note in IntervalDoor.cpp. Two anonymous
+// namespaces in one unity blob are one namespace, and several of these
+// files name a colour Ink.
+namespace PanelPalette
 {
 	// The panel's own palette: parchment on a dark ground, one warm accent.
 	// Deliberately the gate's colours -- a window whose door and whose panel
@@ -57,6 +60,7 @@ namespace
 		return FJsonSerializer::Deserialize(Reader, Value) ? Value : nullptr;
 	}
 }
+using namespace PanelPalette;
 
 UIntervalPanelWidget::UIntervalPanelWidget(const FObjectInitializer& Init)
 	: Super(Init)

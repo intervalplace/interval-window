@@ -65,7 +65,10 @@
 static const FIntervalFrame GEmptyFrame;
 
 
-namespace
+// NAMED, NOT ANONYMOUS: see the note in IntervalDoor.cpp. Two anonymous
+// namespaces in one unity blob are one namespace, and several of these
+// files name a colour Ink.
+namespace HudPalette
 {
 	// ---- THE PLATE ----
 	//
@@ -166,6 +169,7 @@ namespace
 		return T;
 	}
 }
+using namespace HudPalette;
 
 // ---------------------------------------------------------------------------
 // ONE SLOT.

@@ -31,7 +31,10 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogIntervalGate, Log, All);
 
-namespace
+// NAMED, NOT ANONYMOUS: see the note in IntervalDoor.cpp. Two anonymous
+// namespaces in one unity blob are one namespace, and both files name a
+// colour Ink and a colour Quiet.
+namespace GatePalette
 {
 	// The flat window's own plate, read off its stylesheet rather than
 	// invented: warm ink on cold stone, and one accent that is firelight.
@@ -94,6 +97,7 @@ namespace
 		return Row;
 	}
 }
+using namespace GatePalette;
 
 // ---------------------------------------------------------------------------
 
