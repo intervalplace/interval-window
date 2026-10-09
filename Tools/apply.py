@@ -221,6 +221,22 @@ for _hill, _per, _sc, _jit in (('crags', 0.11, 0.30, 0.55),):
         _row['scale'] = {'x': _sc, 'y': _sc, 'z': _sc}
         _row['scaleJitter'] = _jit
 
+# ---- A FERN IN A WOOD IS NOT WHITE ----
+#
+# `greenwood` scatters `Fern_1` half a tile apart wearing the kit's own
+# material, which is a pale, almost white green. One fern is a fern; one every
+# other tile, from the height a citizen's camera actually sits at, is a field
+# of pale blotches on a dark floor, and at the range the settlement sweep was
+# shot from it reads as scree lying in a wood.
+#
+# Every other ground scatters something already in this project's palette or
+# something the kit got right. This is the one that fights it, so it is given
+# the scatter green the grasses wear.
+for _wood, _mat in (('greenwood', 'MI_ScatterGrass'),):
+    _row = have['Scatter'].get(_wood)
+    if _row:
+        _row['material'] = {'refPath': '/Game/Interval/Materials/%s.%s' % (_mat, _mat)}
+
 # WORDS THAT ARE PANELS, and must lie ALONG the line they belong to.
 #
 # A fence, a hedge and a railing are each longer than they are thick, and a run
