@@ -40,7 +40,15 @@
 // inside the frame's copy constructor, under `SownAt`, under `RaiseChunk`.
 //
 // One shared empty frame, and both arms are real references.
-static const FIntervalFrame GEmptyFrame;
+// ONE NAME EACH, BECAUSE A UNITY BUILD HAS NO FILE SCOPE.
+//
+// `static` at file scope gives internal linkage in a translation unit of its
+// own, and a unity build does not give it one: IntervalHand, IntervalHud and
+// IntervalStructures each kept an empty frame under the same name, and the
+// module stopped building the moment two of them were pasted together. Same
+// fault as the colours and as `Round`, in the one place a scan for those two
+// would not have looked.
+static const FIntervalFrame GStructuresEmptyFrame;
 
 
 DEFINE_LOG_CATEGORY_STATIC(LogIntervalStructures, Log, All);
@@ -92,7 +100,7 @@ AIntervalStructures::AIntervalStructures()
 // thousand plots each parsing it is a thousand parses of the same string.
 int64 AIntervalStructures::SownAt(const FString& NodeId)
 {
-	const FIntervalFrame& Frame = Bridge ? Bridge->GetFrame() : GEmptyFrame;
+	const FIntervalFrame& Frame = Bridge ? Bridge->GetFrame() : GStructuresEmptyFrame;
 	if (CropsTick != Frame.Tick)
 	{
 		CropsTick = Frame.Tick;

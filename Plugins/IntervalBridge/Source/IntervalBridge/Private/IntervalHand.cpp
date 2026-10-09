@@ -36,7 +36,15 @@
 // inside the frame's copy constructor, under `SownAt`, under `RaiseChunk`.
 //
 // One shared empty frame, and both arms are real references.
-static const FIntervalFrame GEmptyFrame;
+// ONE NAME EACH, BECAUSE A UNITY BUILD HAS NO FILE SCOPE.
+//
+// `static` at file scope gives internal linkage in a translation unit of its
+// own, and a unity build does not give it one: IntervalHand, IntervalHud and
+// IntervalStructures each kept an empty frame under the same name, and the
+// module stopped building the moment two of them were pasted together. Same
+// fault as the colours and as `Round`, in the one place a scan for those two
+// would not have looked.
+static const FIntervalFrame GHandEmptyFrame;
 
 
 // The last interval the world ACCEPTED a deed from this citizen, as a number.
@@ -904,7 +912,7 @@ TArray<FIntervalOption> AIntervalHand::OptionsFor(const FIntervalTarget& Target)
 		// person, and the person they can always point at is themselves. No
 		// new panel, no new gesture: right-click yourself, exactly as you
 		// would right-click anybody.
-		const FIntervalFrame& Now = Bridge ? Bridge->GetFrame() : GEmptyFrame;
+		const FIntervalFrame& Now = Bridge ? Bridge->GetFrame() : GHandEmptyFrame;
 		if (Now.bHasMe && Target.Id == Now.Me.Id)
 		{
 			// ONLY WHAT IS ACTUALLY OPEN. An oath already sworn cannot be
@@ -1785,7 +1793,7 @@ void AIntervalHand::ActOnWith(const FString& Verb, const FIntervalTarget& Target
 	// aimed at a node, and it is what makes this read as going somewhere.
 	if (Verb == TEXT("cross"))
 	{
-		const FIntervalFrame& Here = Bridge ? Bridge->GetFrame() : GEmptyFrame;
+		const FIntervalFrame& Here = Bridge ? Bridge->GetFrame() : GHandEmptyFrame;
 		if (Here.bHasMe
 			&& FMath::Abs(Here.Me.X - Target.X) + FMath::Abs(Here.Me.Y - Target.Y) > 1)
 		{
@@ -1836,7 +1844,7 @@ void AIntervalHand::ActOnWith(const FString& Verb, const FIntervalTarget& Target
 	// the same place the menu was opened.
 	if (Verb == TEXT("found"))
 	{
-		const FIntervalFrame& Standing = Bridge ? Bridge->GetFrame() : GEmptyFrame;
+		const FIntervalFrame& Standing = Bridge ? Bridge->GetFrame() : GHandEmptyFrame;
 		if (!Standing.bHasMe)
 		{
 			Say(TEXT("nowhere to lay it"), 0, true);
@@ -1859,7 +1867,7 @@ void AIntervalHand::ActOnWith(const FString& Verb, const FIntervalTarget& Target
 		if (Argument == TEXT("*"))
 		{
 			const TArray<FString> Words = PackWords(
-				Bridge ? Bridge->GetFrame() : GEmptyFrame);
+				Bridge ? Bridge->GetFrame() : GHandEmptyFrame);
 			for (int32 i = 0; i < Words.Num(); ++i)
 			{
 				if (!Words[i].IsEmpty()) { Slots.Add(i); }
@@ -1970,7 +1978,7 @@ void AIntervalHand::ActOnWith(const FString& Verb, const FIntervalTarget& Target
 	// Manhattan distance one, and a deed filed from further away is refused
 	// with nothing said about distance -- which reads as the click having done
 	// nothing at all. Walking first is what a citizen would do anyway.
-	const FIntervalFrame& Frame = Bridge ? Bridge->GetFrame() : GEmptyFrame;
+	const FIntervalFrame& Frame = Bridge ? Bridge->GetFrame() : GHandEmptyFrame;
 	if (Frame.bHasMe)
 	{
 		const int32 Reach = FMath::Abs(Frame.Me.X - Target.X)

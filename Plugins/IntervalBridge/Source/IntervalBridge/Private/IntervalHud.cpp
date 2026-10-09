@@ -62,7 +62,15 @@
 // inside the frame's copy constructor, under `SownAt`, under `RaiseChunk`.
 //
 // One shared empty frame, and both arms are real references.
-static const FIntervalFrame GEmptyFrame;
+// ONE NAME EACH, BECAUSE A UNITY BUILD HAS NO FILE SCOPE.
+//
+// `static` at file scope gives internal linkage in a translation unit of its
+// own, and a unity build does not give it one: IntervalHand, IntervalHud and
+// IntervalStructures each kept an empty frame under the same name, and the
+// module stopped building the moment two of them were pasted together. Same
+// fault as the colours and as `Round`, in the one place a scan for those two
+// would not have looked.
+static const FIntervalFrame GHudEmptyFrame;
 
 
 // UNIQUE NAMES, BECAUSE A UNITY BUILD HAS NO FILE SCOPE.
@@ -2805,7 +2813,7 @@ void UIntervalHudWidget::TakeTrade()
 {
 	// TAKING ONE NAMES WHO OFFERED IT, which is the field the world asks for
 	// and the reason the bridge sends the key as well as the name.
-	const FIntervalFrame& Frame = Bridge ? Bridge->GetFrame() : GEmptyFrame;
+	const FIntervalFrame& Frame = Bridge ? Bridge->GetFrame() : GHudEmptyFrame;
 	if (Hand && !Frame.OfferFrom.IsEmpty())
 	{
 		Hand->AcceptTrade(Frame.OfferFrom);

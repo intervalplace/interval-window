@@ -399,9 +399,9 @@ public:
 		// whole of what `Town` is for, and putting ripples back between the
 		// houses would undo it.
 		const float Micro = (Swell(static_cast<float>(TileX),
-		                           static_cast<float>(TileY), 7.f) * 0.90f
+		                           static_cast<float>(TileY), 7.f) * 1.60f
 		                   + Swell(static_cast<float>(TileX),
-		                           static_cast<float>(TileY), 3.f) * 0.35f)
+		                           static_cast<float>(TileY), 3.f) * 0.60f)
 		                  * PerUnit * Relief() * (1.f - Town);
 		return FMath::Lerp(LandAt(TileX, TileY), Base,
 			FMath::Lerp(0.5f, 1.0f, Town)) + Micro;
