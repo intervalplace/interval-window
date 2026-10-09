@@ -65,10 +65,16 @@
 static const FIntervalFrame GEmptyFrame;
 
 
-// NAMED, NOT ANONYMOUS: see the note in IntervalDoor.cpp. Two anonymous
-// namespaces in one unity blob are one namespace, and several of these
-// files name a colour Ink.
-namespace HudPalette
+// UNIQUE NAMES, BECAUSE A UNITY BUILD HAS NO FILE SCOPE.
+//
+// Unreal pastes several .cpp files into one translation unit, and an anonymous
+// namespace in one of them is the SAME namespace as the anonymous namespace in
+// the next. Five of these files called a colour Ink, three called one Quiet and
+// one Ember, two an Oak and a Band, and the module stopped building the moment
+// two of them landed in the same blob. Which files share a blob is UBT's
+// business and changes between builds, so this is not a thing to fix by moving
+// the collision somewhere else: the names are unique now and stay unique.
+namespace
 {
 	// ---- THE PLATE ----
 	//
@@ -107,12 +113,12 @@ namespace HudPalette
 	// Gilt on ink is as medieval as wood and brass and belongs to nobody
 	// else's window; and it lets the gold -- which is this project's own
 	// colour, taken off the cursor -- do the work of saying where things are.
-	const FLinearColor Oak(0.038f, 0.040f, 0.052f, 0.90f);   // ink
+	const FLinearColor HudOak(0.038f, 0.040f, 0.052f, 0.90f);   // ink
 	const FLinearColor OakLit(0.062f, 0.066f, 0.082f, 0.93f);// where the light falls
 	const FLinearColor Recess(0.016f, 0.017f, 0.024f, 0.95f);// a socket cut in it
-	const FLinearColor Band(0.52f, 0.40f, 0.17f, 0.85f);     // the one gold rule
+	const FLinearColor HudBand(0.52f, 0.40f, 0.17f, 0.85f);     // the one gold rule
 	const FLinearColor Lit(0.86f, 0.62f, 0.28f, 0.22f);      // firelight on a hover
-	const FLinearColor Ember(0.90f, 0.58f, 0.24f, 1.f);
+	const FLinearColor HudEmber(0.90f, 0.58f, 0.24f, 1.f);
 	// THE PROJECT'S OWN COLOUR, taken off the cursor and used as the thread
 	// through everything: the title on the gate, the rule round every panel,
 	// the north point of the compass, and the name of whoever is speaking.
@@ -143,16 +149,16 @@ namespace HudPalette
 	UBorder* Board(UWidgetTree* Tree, UWidget* Inside, float Pad = 8.f)
 	{
 		UBorder* Edge = Tree->ConstructWidget<UBorder>(UBorder::StaticClass());
-		Edge->SetBrushColor(Band);
+		Edge->SetBrushColor(HudBand);
 		Edge->SetPadding(FMargin(2.f));
 		// ROUNDED, BUT ONLY JUST. A square panel reads as a debug window and a
 		// very round one reads as a phone; five pixels is the difference
 		// between a rectangle and a made thing, and is what was asked for --
 		// "a little more rounded in the edges. Not too much but a little".
-		Round(Edge->Background, 6.f, Band);
+		Round(Edge->Background, 6.f, HudBand);
 		UBorder* Face = Tree->ConstructWidget<UBorder>(UBorder::StaticClass());
-		Face->SetBrushColor(Oak);
-		Round(Face->Background, 5.f, Oak);
+		Face->SetBrushColor(HudOak);
+		Round(Face->Background, 5.f, HudOak);
 		Face->SetPadding(FMargin(Pad, Pad * 0.75f, Pad, Pad * 0.75f));
 		Face->AddChild(Inside);
 		Edge->AddChild(Face);
@@ -169,7 +175,6 @@ namespace HudPalette
 		return T;
 	}
 }
-using namespace HudPalette;
 
 // ---------------------------------------------------------------------------
 // ONE SLOT.
@@ -600,7 +605,7 @@ void UIntervalMapWidget::Repaint()
 		// otherwise shrink the ring to a smudge round the mark.
 		const float Cx = (Across + Reach + 0.5f) * MapOver;
 		const float Cy = (Down + Reach + 0.5f) * MapOver;
-		// `Wide`, not `Band`: the palette's gold rule already owns that word.
+		// `Wide`, not `HudBand`: the palette's gold rule already owns that word.
 		const int32 Wide = 2 * MapOver;
 		for (int32 A = -Wide; A <= Wide; ++A)
 		{
@@ -1191,7 +1196,7 @@ void UIntervalTabWidget::Light(bool bOpen)
 		FButtonStyle Style = Button->GetStyle();
 		// THE OPEN ONE IS LIT. Without it the sheet above looks like it
 		// belongs to nothing and a second click to close it is a guess.
-		Style.Normal.TintColor = FSlateColor(bOpen ? Band : Recess);
+		Style.Normal.TintColor = FSlateColor(bOpen ? HudBand : Recess);
 		Button->SetStyle(Style);
 	}
 }
@@ -2553,7 +2558,7 @@ void UIntervalHudWidget::SpeechLine(const FIntervalSaid& Talk, bool bMine)
 		}
 	}
 
-	UTextBlock* Head = Text(WidgetTree, bMine ? Ember : Gilt, 12);
+	UTextBlock* Head = Text(WidgetTree, bMine ? HudEmber : Gilt, 12);
 	Head->SetText(FText::FromString(Who));
 	if (UHorizontalBoxSlot* At = Row->AddChildToHorizontalBox(Head))
 	{
@@ -2639,7 +2644,7 @@ void UIntervalHudWidget::Told(const FIntervalFeedLine& Word)
 	// No speaker: this is the world, not a citizen. A refusal is ember, a
 	// notice is the quieter parchment, so the two are told apart at a glance
 	// without either of them shouting.
-	Line(FString(), Word.Text, Word.bRefusal ? Ember : Faded);
+	Line(FString(), Word.Text, Word.bRefusal ? HudEmber : Faded);
 }
 
 void UIntervalHudWidget::Said(const FText& Text_, ETextCommit::Type How)
@@ -3756,7 +3761,7 @@ void UIntervalHudWidget::NativeTick(const FGeometry& Geometry, float Delta)
 		else if (Frame.bStoodDown)
 		{
 			Allowance->SetText(FText::FromString(TEXT("stood down")));
-			Allowance->SetColorAndOpacity(FSlateColor(Ember));
+			Allowance->SetColorAndOpacity(FSlateColor(HudEmber));
 		}
 		else
 		{
@@ -3764,7 +3769,7 @@ void UIntervalHudWidget::NativeTick(const FGeometry& Geometry, float Delta)
 			Allowance->SetText(FText::FromString(
 				FString::Printf(TEXT("%d min"), Minutes)));
 			Allowance->SetColorAndOpacity(FSlateColor(
-				Frame.CeilingLeft <= Frame.CeilingWarn ? Ember : Faded));
+				Frame.CeilingLeft <= Frame.CeilingWarn ? HudEmber : Faded));
 		}
 	}
 

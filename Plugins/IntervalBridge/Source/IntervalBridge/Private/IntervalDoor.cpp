@@ -13,18 +13,21 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogIntervalDoor, Log, All);
 
-// NAMED, NOT ANONYMOUS. Unity builds paste several .cpp files into one
-// translation unit, and two anonymous namespaces in one unit are the SAME
-// namespace: this file and IntervalGate.cpp both call a colour Ink and a
-// colour Quiet, and the plugin stopped compiling the moment the two landed
-// in the same blob. A name each, and `using` so no use site changes.
-namespace DoorPalette
+// UNIQUE NAMES, BECAUSE A UNITY BUILD HAS NO FILE SCOPE.
+//
+// Unreal pastes several .cpp files into one translation unit, and an anonymous
+// namespace in one of them is the SAME namespace as the anonymous namespace in
+// the next. Five of these files called a colour Ink, three called one Quiet and
+// one Ember, two an Oak and a Band, and the module stopped building the moment
+// two of them landed in the same blob. Which files share a blob is UBT's
+// business and changes between builds, so this is not a thing to fix by moving
+// the collision somewhere else: the names are unique now and stay unique.
+namespace
 {
-	const FLinearColor Ink(0.92f, 0.90f, 0.82f, 1.f);
-	const FLinearColor Quiet(0.68f, 0.66f, 0.60f, 1.f);
+	const FLinearColor DoorInk(0.92f, 0.90f, 0.82f, 1.f);
+	const FLinearColor DoorQuiet(0.68f, 0.66f, 0.60f, 1.f);
 	const FLinearColor Warn(0.92f, 0.56f, 0.44f, 1.f);
 }
-using namespace DoorPalette;
 
 UTextBlock* UIntervalDoorWidget::AddRow(UVerticalBox* Box, const FLinearColor& Colour, int32 Size)
 {
@@ -56,12 +59,12 @@ TSharedRef<SWidget> UIntervalDoorWidget::RebuildWidget()
 		UVerticalBox* Box = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("DoorBox"));
 		Frame->SetContent(Box);
 
-		WorldRow     = AddRow(Box, Ink,   15);
-		CitizenRow   = AddRow(Box, Quiet, 12);
-		IntervalRow  = AddRow(Box, Ink,   13);
-		AgreementRow = AddRow(Box, Quiet, 12);
-		StandingRow  = AddRow(Box, Ink,   13);
-		KeyRow       = AddRow(Box, Quiet, 11);
+		WorldRow     = AddRow(Box, DoorInk,   15);
+		CitizenRow   = AddRow(Box, DoorQuiet, 12);
+		IntervalRow  = AddRow(Box, DoorInk,   13);
+		AgreementRow = AddRow(Box, DoorQuiet, 12);
+		StandingRow  = AddRow(Box, DoorInk,   13);
+		KeyRow       = AddRow(Box, DoorQuiet, 11);
 
 		WidgetTree->RootWidget = Frame;
 	}
@@ -89,7 +92,7 @@ void UIntervalDoorWidget::NativeTick(const FGeometry& Geometry, float DeltaSecon
 		KeyRow->SetText(FText::GetEmpty());
 		return;
 	}
-	WorldRow->SetColorAndOpacity(FSlateColor(Ink));
+	WorldRow->SetColorAndOpacity(FSlateColor(DoorInk));
 
 	const FString WorldId = Bridge->GetWorldId();
 	int32 W = 0, H = 0;
@@ -108,25 +111,25 @@ void UIntervalDoorWidget::NativeTick(const FGeometry& Geometry, float DeltaSecon
 	AgreementRow->SetText(FText::FromString(FString::Printf(
 		TEXT("finalized %lld  (%lld behind)   witnesses %d of %d"),
 		Frame.FinalizedTick, Behind, Frame.Witnesses, Frame.Quorum)));
-	AgreementRow->SetColorAndOpacity(FSlateColor(Behind > 5 ? Warn : Quiet));
+	AgreementRow->SetColorAndOpacity(FSlateColor(Behind > 5 ? Warn : DoorQuiet));
 
 	// Where the citizen is standing, or how far through a birth they are.
 	if (Frame.bHasMe)
 	{
 		StandingRow->SetText(FText::FromString(FString::Printf(TEXT("standing at %d, %d"),
 			Frame.Me.X, Frame.Me.Y)));
-		StandingRow->SetColorAndOpacity(FSlateColor(Ink));
+		StandingRow->SetColorAndOpacity(FSlateColor(DoorInk));
 	}
 	else if (Frame.BirthState == TEXT("waiting"))
 	{
 		StandingRow->SetText(FText::FromString(FString::Printf(
 			TEXT("waiting to be born: %d of %d"), Frame.BirthWaited, Frame.BirthRipeAt)));
-		StandingRow->SetColorAndOpacity(FSlateColor(Quiet));
+		StandingRow->SetColorAndOpacity(FSlateColor(DoorQuiet));
 	}
 	else if (Frame.BirthState == TEXT("ripe"))
 	{
 		StandingRow->SetText(FText::FromString(TEXT("the wait is up, crossing")));
-		StandingRow->SetColorAndOpacity(FSlateColor(Ink));
+		StandingRow->SetColorAndOpacity(FSlateColor(DoorInk));
 	}
 	else
 	{

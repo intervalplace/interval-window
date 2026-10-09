@@ -23,15 +23,21 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 
-// NAMED, NOT ANONYMOUS: see the note in IntervalDoor.cpp. Two anonymous
-// namespaces in one unity blob are one namespace, and several of these
-// files name a colour Ink.
-namespace PanelPalette
+// UNIQUE NAMES, BECAUSE A UNITY BUILD HAS NO FILE SCOPE.
+//
+// Unreal pastes several .cpp files into one translation unit, and an anonymous
+// namespace in one of them is the SAME namespace as the anonymous namespace in
+// the next. Five of these files called a colour Ink, three called one Quiet and
+// one Ember, two an Oak and a Band, and the module stopped building the moment
+// two of them landed in the same blob. Which files share a blob is UBT's
+// business and changes between builds, so this is not a thing to fix by moving
+// the collision somewhere else: the names are unique now and stay unique.
+namespace
 {
 	// The panel's own palette: parchment on a dark ground, one warm accent.
 	// Deliberately the gate's colours -- a window whose door and whose panel
 	// disagree about what it is made of reads as two programs.
-	const FLinearColor Ink(0.86f, 0.83f, 0.74f, 1.f);
+	const FLinearColor PanelInk(0.86f, 0.83f, 0.74f, 1.f);
 	const FLinearColor Faint(0.52f, 0.50f, 0.46f, 1.f);
 	const FLinearColor Warm(0.85f, 0.66f, 0.36f, 1.f);
 	const FLinearColor Refused(0.88f, 0.44f, 0.34f, 1.f);
@@ -60,7 +66,6 @@ namespace PanelPalette
 		return FJsonSerializer::Deserialize(Reader, Value) ? Value : nullptr;
 	}
 }
-using namespace PanelPalette;
 
 UIntervalPanelWidget::UIntervalPanelWidget(const FObjectInitializer& Init)
 	: Super(Init)
@@ -100,8 +105,8 @@ TSharedRef<SWidget> UIntervalPanelWidget::RebuildWidget()
 	Frame->SetContent(Column);
 
 	Line(Column, Warm, 13, true)->SetText(FText::FromString(TEXT("CARRIED")));
-	PurseRow = Line(Column, Ink, 12, false);
-	BodyRow = Line(Column, Ink, 12, false);
+	PurseRow = Line(Column, PanelInk, 12, false);
+	BodyRow = Line(Column, PanelInk, 12, false);
 	DoingRow = Line(Column, Faint, 11, false);
 	HoursRow = Line(Column, Faint, 11, false);
 	HaulRow = Line(Column, Warm, 11, false);
@@ -111,7 +116,7 @@ TSharedRef<SWidget> UIntervalPanelWidget::RebuildWidget()
 	const int32 Slots = Owner ? FMath::Max(1, Owner->PackSlots) : 12;
 	for (int32 i = 0; i < Slots; ++i)
 	{
-		PackRows.Add(Line(Column, Ink, 11, false));
+		PackRows.Add(Line(Column, PanelInk, 11, false));
 	}
 
 	Line(Column, Faint, 10, false)->SetText(FText::FromString(TEXT(" ")));
@@ -119,12 +124,12 @@ TSharedRef<SWidget> UIntervalPanelWidget::RebuildWidget()
 	const int32 Gear = Owner ? Owner->WornOrder.Num() : 5;
 	for (int32 i = 0; i < Gear; ++i)
 	{
-		WornRows.Add(Line(Column, Ink, 11, false));
+		WornRows.Add(Line(Column, PanelInk, 11, false));
 	}
 
 	Line(Column, Faint, 10, false)->SetText(FText::FromString(TEXT(" ")));
 	Line(Column, Warm, 11, true)->SetText(FText::FromString(TEXT("LEARNED")));
-	SkillRow = Line(Column, Ink, 11, false);
+	SkillRow = Line(Column, PanelInk, 11, false);
 
 	Line(Column, Faint, 10, false)->SetText(FText::FromString(TEXT(" ")));
 	BookRow = Line(Column, Warm, 11, true);
@@ -132,7 +137,7 @@ TSharedRef<SWidget> UIntervalPanelWidget::RebuildWidget()
 		? FMath::Max(Owner->CommonBook.Num(), Owner->BarrowBook.Num()) : 7;
 	for (int32 i = 0; i < Most; ++i)
 	{
-		SpellRows.Add(Line(Column, Ink, 11, false));
+		SpellRows.Add(Line(Column, PanelInk, 11, false));
 	}
 
 	if (UCanvasPanelSlot* Slot = Root->AddChildToCanvas(Frame))
@@ -154,7 +159,7 @@ TSharedRef<SWidget> UIntervalPanelWidget::RebuildWidget()
 	FeedFrame->SetContent(FeedColumn);
 	for (int32 i = 0; i < 6; ++i)
 	{
-		FeedRows.Add(Line(FeedColumn, Ink, 12, false));
+		FeedRows.Add(Line(FeedColumn, PanelInk, 12, false));
 	}
 	if (UCanvasPanelSlot* Slot = Root->AddChildToCanvas(FeedFrame))
 	{
@@ -220,7 +225,7 @@ void UIntervalPanelWidget::Refresh()
 			{
 				FeedRows[i]->SetText(FText::FromString(Said[From].Text));
 				FeedRows[i]->SetColorAndOpacity(FSlateColor(
-					Said[From].bRefusal ? Refused : Ink));
+					Said[From].bRefusal ? Refused : PanelInk));
 			}
 			else
 			{
@@ -377,7 +382,7 @@ void UIntervalPanelWidget::Refresh()
 				Says = (Qty > 1.0)
 					? FString::Printf(TEXT("%2d  %s ×%d"), i, *Item, static_cast<int32>(Qty))
 					: FString::Printf(TEXT("%2d  %s"), i, *Item);
-				Tint = Ink;
+				Tint = PanelInk;
 			}
 		}
 		PackRows[i]->SetText(FText::FromString(Says));
@@ -415,7 +420,7 @@ void UIntervalPanelWidget::Refresh()
 			if (!Held.IsEmpty())
 			{
 				What = Held;
-				Tint = Ink;
+				Tint = PanelInk;
 			}
 		}
 		WornRows[i]->SetText(FText::FromString(
@@ -446,7 +451,7 @@ void UIntervalPanelWidget::Refresh()
 	{
 		SkillRow->SetText(FText::FromString(Known.IsEmpty()
 			? TEXT("no craft practised yet") : Known));
-		SkillRow->SetColorAndOpacity(FSlateColor(Known.IsEmpty() ? Faint : Ink));
+		SkillRow->SetColorAndOpacity(FSlateColor(Known.IsEmpty() ? Faint : PanelInk));
 	}
 	// ---- THE SPELLBOOK ----
 	//

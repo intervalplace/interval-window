@@ -31,10 +31,16 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogIntervalGate, Log, All);
 
-// NAMED, NOT ANONYMOUS: see the note in IntervalDoor.cpp. Two anonymous
-// namespaces in one unity blob are one namespace, and both files name a
-// colour Ink and a colour Quiet.
-namespace GatePalette
+// UNIQUE NAMES, BECAUSE A UNITY BUILD HAS NO FILE SCOPE.
+//
+// Unreal pastes several .cpp files into one translation unit, and an anonymous
+// namespace in one of them is the SAME namespace as the anonymous namespace in
+// the next. Five of these files called a colour Ink, three called one Quiet and
+// one Ember, two an Oak and a Band, and the module stopped building the moment
+// two of them landed in the same blob. Which files share a blob is UBT's
+// business and changes between builds, so this is not a thing to fix by moving
+// the collision somewhere else: the names are unique now and stay unique.
+namespace
 {
 	// The flat window's own plate, read off its stylesheet rather than
 	// invented: warm ink on cold stone, and one accent that is firelight.
@@ -50,9 +56,9 @@ namespace GatePalette
 	// Kept beside the ink rather than instead of it: body text stays tallow,
 	// because a page of gold is a page nobody can read.
 	const FLinearColor Gold(0.839f, 0.659f, 0.290f, 1.f);
-	const FLinearColor Ink(0.90f, 0.87f, 0.78f, 1.f);
-	const FLinearColor Quiet(0.55f, 0.52f, 0.46f, 1.f);
-	const FLinearColor Ember(0.86f, 0.55f, 0.26f, 1.f);
+	const FLinearColor GateInk(0.90f, 0.87f, 0.78f, 1.f);
+	const FLinearColor GateQuiet(0.55f, 0.52f, 0.46f, 1.f);
+	const FLinearColor GateEmber(0.86f, 0.55f, 0.26f, 1.f);
 	const FLinearColor Stone(0.055f, 0.055f, 0.06f, 0.88f);
 	const FLinearColor Dusk(0.f, 0.f, 0.f, 0.45f);
 
@@ -97,7 +103,6 @@ namespace GatePalette
 		return Row;
 	}
 }
-using namespace GatePalette;
 
 // ---------------------------------------------------------------------------
 
@@ -156,17 +161,17 @@ TSharedRef<SWidget> UIntervalGateWidget::RebuildWidget()
 		Rising.Add(Line(WidgetTree, Box, TEXT("INTERVAL"), Gold, 96, 2.f, 26.f));
 		Rising.Add(RuleIn(WidgetTree, Box, 360.f, 16.f));
 		Rising.Add(Line(WidgetTree, Box,
-			TEXT("a world that runs on rules, not servers"), Quiet, 15, 3.f, 2.f));
-		Rising.Add(Line(WidgetTree, Box, TEXT("THE UNREAL WINDOW"), Ember, 10, 40.f, 8.f));
+			TEXT("a world that runs on rules, not servers"), GateQuiet, 15, 3.f, 2.f));
+		Rising.Add(Line(WidgetTree, Box, TEXT("THE UNREAL WINDOW"), GateEmber, 10, 40.f, 8.f));
 
-		StatusRow = Line(WidgetTree, Box, TEXT("waking the world…"), Ink, 15, 5.f, 1.f);
+		StatusRow = Line(WidgetTree, Box, TEXT("waking the world…"), GateInk, 15, 5.f, 1.f);
 		Rising.Add(StatusRow);
 		// WHAT THE DOOR KNOWS, on the door. A window that opens on a number
 		// climbing and a finalized number that is not is a window that should
 		// say so before you walk in, not after.
-		StandingRow = Line(WidgetTree, Box, TEXT(""), Quiet, 11, 4.f, 1.f);
+		StandingRow = Line(WidgetTree, Box, TEXT(""), GateQuiet, 11, 4.f, 1.f);
 		Rising.Add(StandingRow);
-		KeyRow = Line(WidgetTree, Box, TEXT(""), Quiet, 10, 34.f, 1.f);
+		KeyRow = Line(WidgetTree, Box, TEXT(""), GateQuiet, 10, 34.f, 1.f);
 		Rising.Add(KeyRow);
 
 		// ---- AND THE TWO WAYS A CITIZEN CROSSES BETWEEN WINDOWS ----
@@ -194,7 +199,7 @@ TSharedRef<SWidget> UIntervalGateWidget::RebuildWidget()
 				B->SetStyle(St);
 				UTextBlock* L = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
 				L->SetText(FText::FromString(Text));
-				L->SetColorAndOpacity(FSlateColor(Quiet));
+				L->SetColorAndOpacity(FSlateColor(GateQuiet));
 				FSlateFontInfo F = L->GetFont();
 				F.Size = 10;
 				F.LetterSpacing = 3;
@@ -220,7 +225,7 @@ TSharedRef<SWidget> UIntervalGateWidget::RebuildWidget()
 		}
 
 		// what the bridge said about the last one, in the same quiet hand
-		CarryRow = Line(WidgetTree, Box, TEXT(""), Quiet, 10, 10.f, 1.f);
+		CarryRow = Line(WidgetTree, Box, TEXT(""), GateQuiet, 10, 10.f, 1.f);
 		Rising.Add(CarryRow);
 
 		// ---- THE BUTTON ----
@@ -250,7 +255,7 @@ TSharedRef<SWidget> UIntervalGateWidget::RebuildWidget()
 
 		EnterLabel = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
 		EnterLabel->SetText(FText::FromString(TEXT("…")));
-		EnterLabel->SetColorAndOpacity(FSlateColor(Ember));
+		EnterLabel->SetColorAndOpacity(FSlateColor(GateEmber));
 		{
 			FSlateFontInfo Font = EnterLabel->GetFont();
 			Font.Size = 17;
@@ -328,11 +333,11 @@ void UIntervalGateWidget::NativeTick(const FGeometry& Geometry, float DeltaSecon
 	if (!Bridge || !Bridge->IsConnected())
 	{
 		StatusRow->SetText(FText::FromString(TEXT("no bridge: start unreal-bridge.mjs")));
-		StatusRow->SetColorAndOpacity(FSlateColor(Ember));
+		StatusRow->SetColorAndOpacity(FSlateColor(GateEmber));
 		if (EnterLabel) { EnterLabel->SetText(FText::FromString(TEXT("…"))); }
 		return;
 	}
-	StatusRow->SetColorAndOpacity(FSlateColor(Ink));
+	StatusRow->SetColorAndOpacity(FSlateColor(GateInk));
 
 	const FIntervalFrame& Frame = Bridge->GetFrame();
 	const FString WorldId = Bridge->GetWorldId();
@@ -378,7 +383,7 @@ void UIntervalGateWidget::NativeTick(const FGeometry& Geometry, float DeltaSecon
 		{
 			StandingRow->SetText(FText::FromString(FString::Printf(
 				TEXT("%d × %d tiles,  nothing here is recorded"), W, H)));
-			StandingRow->SetColorAndOpacity(FSlateColor(Quiet));
+			StandingRow->SetColorAndOpacity(FSlateColor(GateQuiet));
 		}
 		else
 		{
@@ -386,7 +391,7 @@ void UIntervalGateWidget::NativeTick(const FGeometry& Geometry, float DeltaSecon
 			StandingRow->SetText(FText::FromString(FString::Printf(
 				TEXT("%d × %d tiles,  %d of %d witnesses,  %lld behind"),
 				W, H, Frame.Witnesses, Frame.Quorum, Behind)));
-			StandingRow->SetColorAndOpacity(FSlateColor(Behind > 5 ? Ember : Quiet));
+			StandingRow->SetColorAndOpacity(FSlateColor(Behind > 5 ? GateEmber : GateQuiet));
 		}
 	}
 	if (KeyRow)
@@ -402,13 +407,13 @@ void UIntervalGateWidget::NativeTick(const FGeometry& Geometry, float DeltaSecon
 		// Empty until somebody asks for something, so the card is not carrying
 		// a blank row of explanation nobody wanted.
 		CarryRow->SetText(FText::FromString(Bridge->CarrySaid));
-		// This card's palette is Ink, Quiet and Ember; there is no warning
+		// This card's palette is GateInk, GateQuiet and GateEmber; there is no warning
 		// colour on it, and inventing one for two lines would put a fourth
 		// hand on a screen whose whole character is that it has three. A
-		// refusal is Ink: brighter than quiet, and it reads as a thing said
+		// refusal is GateInk: brighter than quiet, and it reads as a thing said
 		// rather than a thing gone wrong, which is what a refusal here is.
 		CarryRow->SetColorAndOpacity(FSlateColor(
-			Bridge->CarrySaid.IsEmpty() ? Quiet : (Bridge->bCarryWorked ? Ember : Ink)));
+			Bridge->CarrySaid.IsEmpty() ? GateQuiet : (Bridge->bCarryWorked ? GateEmber : GateInk)));
 	}
 	if (EnterLabel)
 	{
@@ -416,7 +421,7 @@ void UIntervalGateWidget::NativeTick(const FGeometry& Geometry, float DeltaSecon
 		// BREATHING, not blinking. Something on a still card has to move or
 		// the eye decides the picture is frozen and stops looking at it.
 		const float Pulse = 0.78f + 0.22f * (0.5f + 0.5f * FMath::Sin(Age * 2.1f));
-		EnterLabel->SetColorAndOpacity(FSlateColor(Ember * Pulse));
+		EnterLabel->SetColorAndOpacity(FSlateColor(GateEmber * Pulse));
 	}
 }
 

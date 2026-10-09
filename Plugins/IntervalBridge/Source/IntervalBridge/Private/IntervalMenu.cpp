@@ -19,10 +19,16 @@
 #include "Engine/World.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 
-// NAMED, NOT ANONYMOUS: see the note in IntervalDoor.cpp. Two anonymous
-// namespaces in one unity blob are one namespace, and several of these
-// files name a colour Ink.
-namespace MenuPalette
+// UNIQUE NAMES, BECAUSE A UNITY BUILD HAS NO FILE SCOPE.
+//
+// Unreal pastes several .cpp files into one translation unit, and an anonymous
+// namespace in one of them is the SAME namespace as the anonymous namespace in
+// the next. Five of these files called a colour Ink, three called one Quiet and
+// one Ember, two an Oak and a Band, and the module stopped building the moment
+// two of them landed in the same blob. Which files share a blob is UBT's
+// business and changes between builds, so this is not a thing to fix by moving
+// the collision somewhere else: the names are unique now and stay unique.
+namespace
 {
 	// ---- THE SAME BOARD AS EVERYTHING ELSE ----
 	//
@@ -37,11 +43,11 @@ namespace MenuPalette
 	// shared through a header: this module does not depend on the HUD and
 	// should not start to for the sake of four colours. If the palette moves,
 	// both move, and a screenshot says at once whether they still agree.
-	const FLinearColor Ink(0.90f, 0.87f, 0.78f, 1.f);        // what is written
-	const FLinearColor Quiet(0.62f, 0.55f, 0.43f, 1.f);      // the same ink, older
-	const FLinearColor Ember(0.90f, 0.58f, 0.24f, 1.f);      // the default line
-	const FLinearColor Oak(0.038f, 0.040f, 0.052f, 0.94f);   // the board
-	const FLinearColor Band(0.52f, 0.40f, 0.17f, 0.85f);     // the one gold rule
+	const FLinearColor MenuInk(0.90f, 0.87f, 0.78f, 1.f);        // what is written
+	const FLinearColor MenuQuiet(0.62f, 0.55f, 0.43f, 1.f);      // the same ink, older
+	const FLinearColor MenuEmber(0.90f, 0.58f, 0.24f, 1.f);      // the default line
+	const FLinearColor MenuOak(0.038f, 0.040f, 0.052f, 0.94f);   // the board
+	const FLinearColor MenuBand(0.52f, 0.40f, 0.17f, 0.85f);     // the one gold rule
 	const FLinearColor Clear(0.f, 0.f, 0.f, 0.f);
 	const FLinearColor Hover(0.86f, 0.62f, 0.28f, 0.22f);    // firelight on a hover
 
@@ -60,7 +66,6 @@ namespace MenuPalette
 		Brush.TintColor = FSlateColor(Tint);
 	}
 }
-using namespace MenuPalette;
 
 // ---------------------------------------------------------------------------
 
@@ -85,7 +90,7 @@ TSharedRef<SWidget> UIntervalMenuRow::RebuildWidget()
 		// THE DEFAULT IS THE ONE A LEFT CLICK WOULD HAVE DONE, so it is lit --
 		// a menu where every line looks the same makes a player read all of
 		// them every time, and the first line is the one they already have.
-		Line->SetColorAndOpacity(FSlateColor(bIsDefault ? Ember : Ink));
+		Line->SetColorAndOpacity(FSlateColor(bIsDefault ? MenuEmber : MenuInk));
 		FSlateFontInfo Font = Line->GetFont();
 		Font.Size = 13;
 		Line->SetFont(Font);
@@ -142,21 +147,21 @@ TSharedRef<SWidget> UIntervalMenuWidget::RebuildWidget()
 		// A gold rule round a board of ink: two borders, the same two the
 		// panels are made of.
 		Plate = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
-		Plate->SetBrushColor(Band);
-		Round(Plate->Background, 6.f, Band);
+		Plate->SetBrushColor(MenuBand);
+		Round(Plate->Background, 6.f, MenuBand);
 		Plate->SetPadding(FMargin(2.f));
 		Plate->SetVisibility(ESlateVisibility::Collapsed);
 
 		UBorder* Inside = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
-		Inside->SetBrushColor(Oak);
-		Round(Inside->Background, 5.f, Oak);
+		Inside->SetBrushColor(MenuOak);
+		Round(Inside->Background, 5.f, MenuOak);
 		Inside->SetPadding(FMargin(0.f, 4.f, 0.f, 5.f));
 
 		UVerticalBox* Column = WidgetTree->ConstructWidget<UVerticalBox>(
 			UVerticalBox::StaticClass());
 
 		Head = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		Head->SetColorAndOpacity(FSlateColor(Quiet));
+		Head->SetColorAndOpacity(FSlateColor(MenuQuiet));
 		FSlateFontInfo Small = Head->GetFont();
 		Small.Size = 11;
 		Head->SetFont(Small);
