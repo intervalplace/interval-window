@@ -561,6 +561,28 @@ public:
 	 * a tool can write that a running Simulate session reads, which is the
 	 * same road `ForceDay` takes.
 	 */
+	/**
+	 * ---- HOW HIGH THE ISLAND'S SPINE STANDS, in centimetres ----
+	 *
+	 * The ridge has no ground of its own: its tiles are ordinary `crags`, the
+	 * same as the whole eastern third, so nothing in the terrain can tell the
+	 * spine from open country. The generator knows, and the bridge sends a
+	 * `ridge` plane beside the road one, which is how `SpineScatter` already
+	 * plants big rock along it.
+	 *
+	 * Rock alone was not enough. Photographed from above, the spine read as a
+	 * line of boulders lying on flat ground, and the island's one wall, that
+	 * two passes cross and one of them shut, could not be seen as a wall at
+	 * all. A ridge is a thing that RISES.
+	 *
+	 * Here rather than in C++ for the same reason the scatter is: the window
+	 * is told WHERE the ridge is and the level says what it looks like. Zero
+	 * leaves the spine lying as flat as the ground beside it, which is what
+	 * this window did before it was told.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interval|Ground")
+	float SpineRise = 0.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interval|Debug")
 	float WhatDrewX = -1.f;
 

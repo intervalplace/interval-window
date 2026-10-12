@@ -651,7 +651,8 @@ void AIntervalGround::RaiseChunk(const FIntervalTerrainChunk& Chunk)
 	}
 	const UIntervalLook* SpanLook = UIntervalLook::Resolve(Look_);
 	static const FIntervalSpan NoSpan;
-	Actor->Build(Chunk, Ground, ScatterByCode, SpineScatter, RoofByCode,
+	Actor->Build(Chunk, Ground, ScatterByCode, SpineScatter,
+		SpanLook ? SpanLook->SpineRise : 0.f, RoofByCode,
 		ThresholdByCode, ShapeOfTiles(), SpanLook ? SpanLook->Span : NoSpan,
 		RiverCode, bGroundAffectsIndirect);
 

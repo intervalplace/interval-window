@@ -46,7 +46,7 @@ public:
 	 */
 	void Build(const FIntervalTerrainChunk& Chunk, UMaterialInterface* GroundMaterial,
 		const TArray<FIntervalScatterKind>& ScatterByCode,
-		const FIntervalScatterKind& SpineScatter,
+		const FIntervalScatterKind& SpineScatter, float SpineRiseIn,
 		const TArray<FIntervalRoofKind>& RoofByCode,
 		const TArray<uint8>& ThresholdByCode,
 		const TArray<uint8>& ShapeByCode, const FIntervalSpan& SpanLook,
@@ -249,6 +249,25 @@ private:
 
 	/** The island's spine, one byte a tile. See FIntervalTerrainChunk::Spine. */
 	TArray<uint8> Spine;
+
+	/**
+	 * The spine, blurred into a hill. `Spine` is a hard 0 or 1 about five
+	 * tiles wide, and raising that directly would be a wall with a cliff on
+	 * each side. Averaged over a two tile disc it becomes a rounded rise that
+	 * peaks along the middle and runs out at the edges.
+	 *
+	 * A ROAD TAKES ITS LIFT AWAY, before the blur rather than after. The two
+	 * passes cross the ridge, and a pass is a notch in a wall rather than a
+	 * road laid over the top of one. Blurring afterwards turns the notch into
+	 * a saddle, which is what a pass through a ridge looks like.
+	 *
+	 * Two tiles is also the most the skirt can carry, so neighbouring chunks
+	 * blur the same tiles and agree along their seam.
+	 */
+	TArray<float> SpineLift;
+
+	/** Centimetres at the crest, straight off the look. Zero draws no ridge. */
+	float SpineRise = 0.f;
 	TArray<uint8> Seeds;
 
 	/** Tile code -> what it does to the land. See the constants above. */

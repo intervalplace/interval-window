@@ -129,8 +129,16 @@ float AIntervalChunk::HeightOfTile(int32 WorldX, int32 WorldY, int32 Index) cons
 	// height would drop the road into the river at both ends.
 	const bool bIsWay = (Shape == ShapeDeck)
 		|| (Ways.IsValidIndex(Index) && Ways[Index] != 0);
-	return UIntervalGeometry::GroundAt(WorldX, WorldY, bIsWay,
+	const float Land = UIntervalGeometry::GroundAt(WorldX, WorldY, bIsWay,
 		Shape == ShapeWater, Shape == ShapeFloor);
+	// AND THE SPINE STANDS UP. Told where by the bridge's `ridge` plane and
+	// how high by the look; see SpineLift. Water is left alone, because a
+	// tarn on the ridge lies in the ridge rather than on top of it.
+	if (SpineRise != 0.f && Shape != ShapeWater && SpineLift.IsValidIndex(Index))
+	{
+		return Land + SpineRise * SpineLift[Index];
+	}
+	return Land;
 }
 
 bool AIntervalChunk::IsDeckLocal(int32 LocalX, int32 LocalY) const
@@ -320,7 +328,7 @@ float AIntervalChunk::GetReliefAt(int32 TileX, int32 TileY) const
 
 void AIntervalChunk::Build(const FIntervalTerrainChunk& Chunk, UMaterialInterface* GroundMaterial,
 	const TArray<FIntervalScatterKind>& ScatterByCode,
-	const FIntervalScatterKind& SpineScatter,
+	const FIntervalScatterKind& SpineScatter, float SpineRiseIn,
 	const TArray<FIntervalRoofKind>& RoofByCode,
 	const TArray<uint8>& ThresholdByCode,
 	const TArray<uint8>& ShapeByCode, const FIntervalSpan& SpanLook,
@@ -356,6 +364,50 @@ void AIntervalChunk::Build(const FIntervalTerrainChunk& Chunk, UMaterialInterfac
 	}
 	Ways.SetNumZeroed(Expected);
 	Spine.SetNumZeroed(Expected);
+
+	// ---- THE SPINE, BLURRED INTO A HILL ----
+	//
+	// See SpineLift in the header. `Spine` is a hard edged band about five
+	// tiles across, and lifting that as it stands would be a wall with a cliff
+	// down either side. A road takes its own lift away BEFORE the blur, so the
+	// two passes come out as saddles rather than as roads laid over a wall.
+	SpineRise = SpineRiseIn;
+	SpineLift.Init(0.f, Expected);
+	if (SpineRise != 0.f)
+	{
+		const int32 SH2 = Height + Skirt * 2;
+		// FOUR, WHICH IS THE WHOLE SKIRT. The band is about five tiles wide,
+		// so a two tile blur spread it over nine and gave a face steeper than
+		// one in one: grass standing up like the wall of a dam. Four spreads
+		// it over thirteen, which is a slope a person could climb and which
+		// reads as a ridge rather than a kerb. It is also the most the skirt
+		// can carry, and neighbouring chunks must blur the same tiles or they
+		// disagree along their seam.
+		const int32 Reach = FMath::Min(4, Skirt);
+		for (int32 Y = 0; Y < SH2; ++Y)
+		{
+			for (int32 X = 0; X < Stride; ++X)
+			{
+				float Sum = 0.f; int32 Seen = 0;
+				for (int32 DY = -Reach; DY <= Reach; ++DY)
+				{
+					for (int32 DX = -Reach; DX <= Reach; ++DX)
+					{
+						const int32 NX = X + DX, NY = Y + DY;
+						if (NX < 0 || NY < 0 || NX >= Stride || NY >= SH2) { continue; }
+						const int32 N = NY * Stride + NX;
+						++Seen;
+						const bool bUp = Spine[N] != 0 && Ways[N] == 0;
+						if (bUp) { Sum += 1.f; }
+					}
+				}
+				// Smoothstep, so the foot of the ridge meets the plain without
+				// a crease, for the same reason LandAt eases its own lattice.
+				const float T = Seen > 0 ? Sum / Seen : 0.f;
+				SpineLift[Y * Stride + X] = T * T * (3.f - 2.f * T);
+			}
+		}
+	}
 	Seeds.SetNumZeroed(Expected);
 	// A bridge older than this plane sends none: everything reads dry, no
 	// channel is dug anywhere, and the crossings are drawn flat -- which is

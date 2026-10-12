@@ -49,19 +49,29 @@ Work it in this order, hardest-to-miss first:
 The audit prints the whole list; run it rather than working from this summary,
 because it is the thing that cannot go stale.
 
-## 1. The ridge should look like a mountain ridge
+## ~~1. The ridge should look like a mountain ridge~~
 
-It is the island's spine and the single most important piece of geography --
-two named passes cross it and one of them is shut -- and it is drawn as
-ordinary rough ground. There is no way to look at the world and see where the
-wall is.
+DONE, and half of it was already done when this was written. The bridge had
+been sending the `ridge` plane beside the road one for a while, the window was
+decoding it (as `Chunk.Spine`), and `SpineScatter` was already planting big
+rock along the crest. What was missing was the other word in this item's own
+brief: RISING.
 
-The ground under it is `crags`, the same as the whole eastern third, so the
-terrain code cannot tell the spine from open country. The generator knows
-(`onRidge`), so the BRIDGE should say: the terrain chunk already carries a
-`road` bitmap beside its tiles, and a `ridge` one belongs there too. The window
-then has something to draw against -- big rock, dense, and rising -- without
-knowing what a ridge IS, which is the architecture rule.
+The spine was flat. 1826 tiles running north to south, x 610 to 635, drawn as
+a line of boulders lying on level ground, and from above you could not see
+that there was a wall there at all. Nothing in the elevation field knows about
+it either: `elevAt` is two octaves of noise and the ridge is not one of them.
+
+So `HeightOfTile` lifts the ground on spine tiles, by `SpineRise` on the look
+(the level says how high; the window only knows where it was told). The hard
+five-tile band is blurred over four tiles into a rounded rise, and a road takes
+its own lift away BEFORE that blur, so the one crossing comes out as a saddle
+with rock standing either side rather than a road over a wall.
+
+The height was measured by looking, three times: eight metres is a bank at the
+edge of a field, twenty over a two-tile blur is a wall of grass like the face
+of a dam, and sixteen over four tiles is a slope a person could walk up to a
+crest lined with boulders.
 
 ## 2. Walk the whole island and photograph every region
 

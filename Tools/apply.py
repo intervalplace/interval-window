@@ -830,6 +830,29 @@ have['GroundMaterial'] = {
 # world decides. Set it to 0.9 to photograph something at noon without waiting
 # the better part of an hour for one.
 have['ForceDay'] = -1.0
+
+# ---- AND THE ISLAND'S SPINE STANDS UP ----
+#
+# The ridge is the one wall on the island: two named passes cross it and one of
+# them is shut. Its tiles are ordinary `crags`, the same as the whole eastern
+# third, so nothing in the terrain can tell it from open country. The generator
+# knows, the bridge sends a `ridge` plane beside the road one, and the window
+# has planted big rock along it for a while.
+#
+# Rock alone was not enough. From above it read as a line of boulders lying on
+# flat ground, and you could not see that there was a wall there at all. Eight
+# MEASURED BY LOOKING, THREE TIMES. Eight metres read as a bank at the edge of
+# a field. Twenty, over the two tile rounding it first had, was a wall of grass
+# standing up like the face of a dam, because the band is only five tiles wide
+# and that is steeper than one in one. Sixteen, with the rounding widened to
+# four tiles (the whole skirt, which is as far as neighbouring chunks can agree
+# across their seam), is a slope a person could walk up to a crest lined with
+# boulders. That is a ridge.
+#
+# A road takes its own lift away before the rounding, so the one crossing comes
+# out as a saddle with rock standing either side of it rather than a road laid
+# over the top of a wall.
+have['SpineRise'] = 1600.0
 # HOW MUCH OF THE SKY REACHES THE GROUND. One is the capture taken at face
 # value, which put a black face on everything the sun could not see. See the
 # note on `SkyLift` in IntervalLook.h -- this number is meant to be looked at,
