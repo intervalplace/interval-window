@@ -36,7 +36,20 @@ S=/private/tmp/claude-501/-Users-matsjulner-Documents-Unreal-Projects-interval/d
 # left here is a minute for the editor to finish opening the level.
 WARM="${WARM:-60}"
 
+# ---- AND EVERYTHING THEY READ, WRITTEN FIRST ----
+#
+# These three write into the scratchpad, which is per-session, so on any fresh
+# session they are not there. `itemart.py` reads `scope.json` and dies without
+# it; `icons.py` reads `beasts.json` and `beastposes.json` and, finding
+# neither, renders every creature in its BIND POSE. That is not an error: the
+# render succeeds, the files are written, and what comes out is a bestiary of
+# animals lying on their sides, which is how the handbook came to have a goat
+# and a sheep upside down on the same page.
+#
+# So they run here, every time, rather than being remembered about.
+node "$SP/scope.mjs" > "$S/scope.json"
 python3 "$SP/itemart.py" | tail -1
+python3 "$SP/beastart.py" | tail -2
 cp "$SP/icons.py" "$SP/tiers.py" "$SP/playremote.py" "$S/"
 printf '%s' "${1:-}" > "$S/icons.only"
 

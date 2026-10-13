@@ -208,6 +208,31 @@ def shoot(w, mesh_path, name):
     # at all and reads as a cut-out; the broad face is turned toward the camera
     # and then tipped twenty-five degrees off it, which is enough to see an
     # edge and know the thing is solid.
+    # ---- unreal.Rotator TAKES (ROLL, PITCH, YAW) ----
+    #
+    # NOT (pitch, yaw, roll). Every camera in this file was built as
+    # `Rotator(-12.0, broad, 0.0)` meaning pitch -12, yaw broad, roll 0, and
+    # what that actually asked for was roll -12, PITCH BROAD. With broad at
+    # 180 the camera is upside down: measured, its up vector comes back
+    # (0, -0.21, -0.98), pointing at the ground.
+    #
+    # So every creature in the bestiary was photographed upside down, and the
+    # handbook went to print with the sheep and the goat on their backs on the
+    # same page. It was blamed on the bind pose, and an entire animation path
+    # was built to cure it -- the idle is fetched, the component is told to
+    # animate in the editor and to tick its pose unseen -- and the creatures
+    # came back upside down in exactly the same way, which is what finally
+    # pointed here.
+    #
+    # It hid for so long because of the line below: an ITEM is turned to face
+    # `look.get_forward_vector()`, so an item faces the camera however the
+    # camera is held, and the only trace left is a pleasing diagonal that
+    # everyone read as a style. A creature is never turned, so a creature
+    # shows the truth.
+    #
+    # The order was confirmed in the editor rather than reasoned about:
+    # Rotator(1, 2, 3) answers pitch 2, yaw 3, roll 1.
+    #
     # ---- A CREATURE IS LOOKED AT FROM NEARER ITS OWN HEIGHT ----
     #
     # Thirty degrees down is right for an object lying on a table, which is
@@ -238,9 +263,9 @@ def shoot(w, mesh_path, name):
         # Twelve degrees down rather than thirty, because an animal is
         # recognised from near its own height.
         broad = 180.0 if size.y >= size.x else 90.0
-        look = unreal.Rotator(-12.0, broad, 0.0)
+        look = unreal.Rotator(0.0, -12.0, broad)
     else:
-        look = unreal.Rotator(-30.0, 135.0, 0.0)
+        look = unreal.Rotator(0.0, -30.0, 135.0)
     fwd = look.get_forward_vector()
     flat = min(size.x, size.y, size.z) / max(size.x, size.y, size.z, 1e-6)
     faces = None
@@ -328,6 +353,29 @@ def shoot(w, mesh_path, name):
                 # `refresh_bone_transforms`; neither is exposed to Python. The
                 # method list is worth reading before guessing a third time.
                 comp.set_update_animation_in_editor(True)
+                # ---- AND TO TICK ITS POSE WHILE NOTHING IS LOOKING ----
+                #
+                # A skeletal mesh component defaults to
+                # `OnlyTickPoseWhenRendered`, and a mesh spawned ten thousand
+                # units out in an empty editor level and photographed by a
+                # SceneCapture2D is not "rendered" by that test. So this is
+                # the right thing to ask for and it is asked for here.
+                #
+                # IT IS NOT WHAT WAS WRONG WITH THE BESTIARY, and this note
+                # says so because the first version of it claimed otherwise.
+                # The creatures were upside down because the CAMERA was built
+                # with the wrong argument order; see the long note above. This
+                # line was added while chasing that, the creatures came back
+                # upside down in exactly the same way, and the camera was found
+                # afterwards. Whether it changes any picture at all has not
+                # been proved either way. It is kept because a component told
+                # to animate in the editor should also be told to tick, and it
+                # is labelled honestly because a confident wrong reason in a
+                # comment is worse than no comment.
+                comp.set_editor_property(
+                    'visibility_based_anim_tick_option',
+                    unreal.VisibilityBasedAnimTickOption.
+                    ALWAYS_TICK_POSE_AND_REFRESH_BONES)
                 comp.play(False)
                 # A LITTLE WAY IN, NOT AT FRAME ZERO. The first frame of an
                 # idle is often still the rest pose; a quarter of a second is
