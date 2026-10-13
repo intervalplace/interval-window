@@ -20,6 +20,9 @@ STONE,TIMBER,THATCH,ROCK,CLOTH,CANOPY = (M(x) for x in
 # The dark inside an opening. See MI_PropDark in make_prop.py for why a hole
 # needed a material of its own rather than a darker rock.
 DARK = M('MI_PropDark')
+# Turned earth. Not timber: see MI_PropSoil in make_prop.py for what drawing a
+# seedbed in boards looked like from the air.
+SOIL = M('MI_PropSoil')
 
 def P(mesh, mat, sx, sy, sz, ox=0.0, oy=0.0, oz=0.0, pitch=0.0, yaw=0.0, roll=0.0, shadow=True):
     return {'mesh': {'refPath': mesh}, 'material': mat,
@@ -1663,7 +1666,7 @@ def SOWN(bed_w, bed_d, plant, n=6, spread=52.0, s=1.0):
 # count of farmable plots is unchanged, and the engine's tick costs exactly
 # what it did -- which is the whole reason for doing it this way rather than
 # ploughing the gaps with two and a half thousand more nodes.
-PLOT_BED = (CUBE, TIMBER, 3.92, 2.04, 0.06, 3.0)
+PLOT_BED = (CUBE, SOIL, 3.92, 2.04, 0.06, 3.0)
 # MEASURED, NOT GUESSED, AND THE FIRST GUESS WAS BADLY WRONG. `Plant_7_Big` is
 # 131cm ACROSS and 25cm tall -- a wide flat mat of purple flowers, not a crop --
 # so six of them at full size overlapped into a two-metre carpet and a field of

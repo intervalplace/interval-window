@@ -57,6 +57,22 @@ KIND = {
     'MI_PropCloth':    (0.330, 0.130, 0.098, 0.78,  0.0, 0.07,  0.0),
     'MI_PropCanopy':   (0.044, 0.082, 0.040, 0.96,  0.0, 0.14,  0.0),
     'MI_PropHedge':    (0.072, 0.128, 0.056, 0.95,  0.0, 0.14,  0.0),
+    # TURNED EARTH, WHICH WAS BEING DRAWN AS TIMBER.
+    #
+    # A plot's bed took MI_PropTimber, and the last number in these rows is
+    # the PLANK WIDTH: timber is scored every 23 cm because timber is boards.
+    # So a bed of soil came out as a sheet of decking lying in the grass, and
+    # a field of them read as planking dropped in open country. It was asked
+    # about from the air: "what looks like bridge or terrace or something
+    # randomly placed on grass". Nothing was misplaced; the ground was wood.
+    #
+    # It shows worst on a world nobody has farmed yet, because a plot has
+    # three stages and the first one is bare earth: at a founding EVERY plot
+    # on the island is a bare bed, so every one of them is a plank deck.
+    #
+    # Darker and less red than timber, no boards, and grainier than anything
+    # else here -- turned earth is clods, and the grain is what says so.
+    'MI_PropSoil':     (0.088, 0.064, 0.044, 0.97,  0.0, 0.22,  0.0),
     # THE DARK INSIDE AN OPENING, which is not a colour anything here wore.
     # A cave mouth is a hole in a hillside and the hole is the whole point of
     # it: drawn in rock it is a boulder, which is exactly what it was. Near

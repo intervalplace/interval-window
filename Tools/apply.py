@@ -533,8 +533,12 @@ for _w, (_plant, _n, _s, _gap) in PLOTS.items():
     # now that neighbouring beds MEET, a four per cent jitter is a sixteen
     # centimetre gap at one joint and an overlap at the next, and a field of
     # those reads as broken ground rather than as ploughing.
+    # AND THE LINE BELOW THIS ONE USED TO PUT IT BACK. `scaleJitter` was set
+    # to nought and then to 0.04 on the very next statement, so the paragraph
+    # above explained a rule the code then broke, and the beds have been
+    # jittering ever since. Four per cent of a 7.8 m bed is a 31 cm error at
+    # a joint, which is the gap the note is about.
     props[_w]['scaleJitter'] = 0.0
-    props[_w]['scaleJitter'] = 0.04
     props[_w]['bCastShadow'] = True
 print('sown: %d beds' % len(PLOTS))
 
