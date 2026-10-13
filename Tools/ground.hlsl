@@ -993,12 +993,51 @@ if (Code == 11 || Code == 12)
 	       + sin(W.x * -0.0019 + W.y * 0.0052 + Time * 0.13) * 0.8;
 	Warp.y = sin(W.x * 0.0033 + W.y * -0.0045 + Time * 0.17)
 	       + sin(W.x * 0.0058 + W.y * 0.0021 + Time * 0.09) * 0.8;
-	// EASED BACK from 210. At that strength the crests curled into whorls and
-	// the sea read as marbling rather than water: the lattice was gone and
-	// something worse had replaced it. Eighty is enough to stop any two
-	// stretches being in step, which is all that was ever needed, and leaves
-	// the waves looking like waves.
-	float2 Wrp = W.xy + Warp * 80.0;
+	// ONE STRENGTH PER WAVE SCALE, because a single number cannot serve both.
+	// What the warp costs is measured in WAVELENGTHS, and the two scales below
+	// are three and a half times apart, so the same eighty units is a gentle
+	// nudge to one and a complete scramble of the other.
+	//
+	// Eighty against the chop is a phase swing of about six radians, more than
+	// a whole cycle, and that is the scramble that stops the fine trains
+	// interfering. Eighty against the swell is nearly two radians, over half a
+	// wavelength, and that COMBS the long crests: they come out as curving
+	// parallel bands, which is the sea reading as swirly. Both were tried from
+	// one number: at eighty the bands, at forty-five the bands went but the
+	// fine interference came back as rings. There is no single value, because
+	// the fault is not the strength, it is the sharing.
+	//
+	// So the swell gets twenty-two, a swing of half a radian, enough that no
+	// two stretches of sea are in step and far short of combing. The chop
+	// keeps the full eighty it needs.
+	// A SECOND WARP, AT THE CHOP'S OWN SCALE. One field cannot scramble both,
+	// and not because it is too weak: because of what a warp is measured in.
+	// This field turns over about every two hundred and forty units, which is
+	// three wavelengths of the swell and eleven of the chop. Stretched far
+	// enough to scramble the chop it drags the swell more than half a
+	// wavelength as well, and a swell dragged that far comes out as curving
+	// parallel bands -- which is the sea reading as swirly, which is what was
+	// reported.
+	//
+	// Straightening the swell alone was tried and photographed, and it UNCOVERS
+	// something: the chop's own two trains interfere in a regular beaded
+	// lattice, and that lattice had been there the whole time with the swirl
+	// drawn over the top of it. Taking the swirl away does not remove it, it
+	// shows it.
+	//
+	// So each scale gets a warp that turns over about three and a half times
+	// its own wavelength, which is the ratio that worked. The swell keeps the
+	// slow field, eased to twenty-two: half a radian, enough that no two
+	// stretches are in step, far short of combing. The chop rides on that -- a
+	// small wave sits on a big one, it does not live somewhere else -- and
+	// then takes a fast field of its own on top.
+	float2 Rough;
+	Rough.x = sin(W.x * 0.0123 + W.y * 0.0081 + Time * 0.63)
+	        + sin(W.x * -0.0057 + W.y * 0.0156 + Time * 0.39) * 0.8;
+	Rough.y = sin(W.x * 0.0099 + W.y * -0.0135 + Time * 0.51)
+	        + sin(W.x * 0.0174 + W.y * 0.0063 + Time * 0.27) * 0.8;
+	float2 WrpL = W.xy + Warp * 22.0;
+	float2 WrpC = WrpL + Rough * 26.0;
 
 	// A five metre SWELL, always there, which is what survives distance; and a
 	// metre-and-a-half CHOP on top, faded out with distance because below a
@@ -1007,8 +1046,8 @@ if (Code == 11 || Code == 12)
 	// The phase is never scaled by anything the camera knows. An earlier cut
 	// scaled the WAVELENGTH by distance and the sea came out in concentric
 	// rings centred on the eye, which travelled with it.
-	float2 Ws = Wrp * 0.013;
-	float2 Wc = Wrp * 0.045;
+	float2 Ws = WrpL * 0.013;
+	float2 Wc = WrpC * 0.045;
 	float SwellL = sin(Ws.x * 1.00 + Ws.y * 0.62 + Time * 0.58)
 	             + sin(Ws.x * -0.74 + Ws.y * 1.31 + Time * 0.42) * 0.85;
 	float SwellC = sin(Wc.x * 1.00 + Wc.y * 0.62 + Time * 1.15)
