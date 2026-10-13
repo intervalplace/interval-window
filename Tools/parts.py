@@ -2254,9 +2254,11 @@ ARMED = {
     'iron-pickaxe': 'Pickaxe_Bronze',  'steel-pickaxe': 'Pickaxe_Bronze',
     'quick-pickaxe': 'Pickaxe_Bronze',  'great-pickaxe': 'Pickaxe_Bronze',
     'torch': 'Torch_Metal',
-    # THE SCYTHE has been in the kit all along and nothing used it. `spade` is
-    # the nearest word this world has to a long-hafted working tool.
-    'spade': 'Scythe',
+    # `spade` IS NOT HERE ANY MORE. It was the kit's `Scythe`, on the reasoning
+    # that the scythe had been sitting unused and a spade was the nearest word
+    # this world has to a long-hafted working tool. Both halves of that were
+    # true and it still put a scythe in the handbook under the word spade,
+    # which is the one thing a reference book must not do. Forged; see below.
     # bows, which the kit has four of
     'wooden-bow': 'Bow_Wooden',   'heartwood-bow': 'Bow_Wooden',
     # `hollow-bow` and `horn-bow` are forged; see below. They were both this
@@ -2712,6 +2714,15 @@ WORN['horn-bow'] = kit(WEAR(FORGED('horn_bow'), None, 'hand_r',
 # well strung. Nothing at forty-five gold is.
 WORN['hollow-bow'] = kit(WEAR(FORGED('hollow_bow'), None, 'hand_r',
                               1.0, 1.0, 1.0, pitch=-116.0))
+
+# A spade: blade, tread, socket, haft and a D grip. No kit here has one, and a
+# spade is an easy thing to forge honestly. What makes it read as a spade
+# rather than a paddle is the TREAD, the folded lip along the top of the blade
+# that a boot presses on; it is two centimetres of detail and it is the whole
+# difference between a digging tool and an oar. Forged along its own +Z like
+# every other long tool, so it takes the bows' hang.
+WORN['spade'] = kit(WEAR(FORGED('spade'), None, 'hand_r',
+                         1.0, 1.0, 1.0, pitch=-116.0))
 
 # ---- WHAT A CITIZEN IS CARRYING WHEN IT IS A BAR OF METAL ----
 #

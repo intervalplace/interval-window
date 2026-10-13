@@ -1127,13 +1127,58 @@ def web():
     return m, 'web'
 
 
+# ---------------------------------------------------------------------------
+# THE SPADE, WHICH WAS A SCYTHE.
+#
+# `spade` was pointed at the kit's `Scythe` with a note saying the scythe had
+# been sitting there unused and a spade was the nearest word this world has to
+# a long-hafted working tool. Both halves of that were true and the result was
+# still a scythe in the handbook under the word spade, which is the one thing
+# a reference book cannot do. Reported on sight: "the spade item seems to be a
+# scythe not a spade at all".
+#
+# No kit here has a spade, so it is forged, and a spade is an easy thing to
+# forge honestly: a blade, a socket, a haft and a grip. What makes it read as
+# a spade rather than a paddle is the TREAD -- the folded lip along the top of
+# the blade that a boot presses on. It is two centimetres of detail and it is
+# the whole difference between a digging tool and an oar.
+#
+# 119 cm overall, which is a spade sized to a 181 cm citizen.
+def spade():
+    m = Mesh()
+    # The blade: a shield shape coming to a shallow point, hollow side to the
+    # front. Anticlockwise from the point, up the right edge and down the left.
+    blade = [(0.0, 0.0), (6.6, 3.2), (8.4, 12.0), (9.4, 29.0),
+             (-9.4, 29.0), (-8.4, 12.0), (-6.6, 3.2)]
+    m.plate(blade, 0.9, 'Iron')
+    # THE TREAD, one each side of the socket, which is what a boot stands on.
+    for side in (-1.0, 1.0):
+        m.tube([(-1.1, side * 3.4, 29.4), (-1.1, side * 8.6, 29.4)],
+               [1.25, 1.05], 5, 'Iron')
+    # The socket, swallowing the foot of the haft.
+    m.lathe([(2.0, 0.0), (3.1, 2.0), (2.9, 9.0), (2.0, 13.0)], 8, 'Iron',
+            origin=(0.0, 0.0, 26.0))
+    # The haft, tapering as a haft does.
+    m.tube([(0, 0, 28), (0, 0, 70), (0, 0, 104)], [1.95, 1.80, 1.70], 8, 'Wood')
+    # The D grip: two cheeks splaying off the haft and a crosspiece through
+    # them. A spade is held two-handed and the top hand goes HERE, so without
+    # it the haft just stops and the thing reads as a pole with a blade on it.
+    for side in (-1.0, 1.0):
+        m.tube([(0.0, side * 1.6, 102.5),
+                (0.0, side * 4.3, 109.0),
+                (0.0, side * 4.1, 116.5)], [1.35, 1.20, 1.15], 5, 'Oak')
+    m.tube([(0.0, -4.6, 117.2), (0.0, 4.6, 117.2)], [1.30, 1.30], 6, 'Oak')
+    return m, 'spade'
+
+
 PIECES = (web, wolf_mask, hare_mask, hart_mask, raven_mask,
           gold_legs, bone_pile, skull_pile, sheep_skull, horn, siege_engine,
           torc_iron, torc_gold, old_chain, gold_chain, fishing_rod,
           wand, fire_siphon, handgonne,
           crossbow, great_crossbow, star_flail, barb, bone_staff, goo_staff,
           bird,
-          king_shroud, javelin, shot, star_grit, horn_bow, hollow_bow)
+          king_shroud, javelin, shot, star_grit, horn_bow, hollow_bow,
+          spade)
 
 if __name__ == '__main__':
     for fn in PIECES:
