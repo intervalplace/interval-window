@@ -496,8 +496,18 @@ LANDMARKS.update({
                     [P(CONE, THATCH, 1.00, 1.00, 0.44, oz=142)]),
   # --- somebody's work, left standing ---
   'charcoal-ring':  K(CYL, ROCK, 1.50, 1.50, 0.14, 7, 360, 0.14, None, False),
-  'charcoal-clamp': K(CONE, ROCK, 1.70, 1.70, 1.10, 55, 360, 0.16,
-                      [P(CYL, ROCK, 0.24, 0.24, 0.30, oz=118)]),
+  # THE MESH FOR THIS ALREADY EXISTED, AND THE WRONG WORD HAD IT.
+  #
+  # `make_art.py` forged a charcoal clamp, and the only thing wired to it was
+  # `keeper.collier`, who CARRIES one. The clamp itself -- the thing standing
+  # in the greenwood that a collier tends -- stayed a cone a metre and a
+  # seventy across with a little cylinder on top for a chimney, and that is
+  # what the region survey photographed: smooth grey cones sitting in the
+  # grass among the log piles and the stumps.
+  #
+  # Scale 1, like the collier's, because make_art forges at real size.
+  'charcoal-clamp': K(FORGED_PATH('charcoal_clamp'), None,
+                      1.00, 1.00, 1.00, 0, 360, 0.10),
   'crude-hearth':   K(CYL, ROCK, 0.90, 0.90, 0.22, 11, 360, 0.16,
                       [P(CUBE, TIMBER, 0.50, 0.11, 0.11, oz=26, yaw=28),
                        P(CUBE, TIMBER, 0.50, 0.11, 0.11, oz=26, yaw=-54)]),
