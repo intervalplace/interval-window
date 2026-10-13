@@ -331,6 +331,20 @@ def legs(w, d, h, r=0.09):
     return [P(CUBE, TIMBER, r, r, h / 100.0, ox=x, oy=y, oz=h / 2.0)
             for x in (-w, w) for y in (-d, d)]
 
+def ring(n, r, mk, start=0.0):
+    """`n` parts evenly around a circle of radius `r` centimetres.
+
+    `mk` is handed the bearing in degrees and the x and y that bearing works
+    out to, and returns the part. It is a helper rather than six lines of
+    offsets because six rods placed by hand is how one of them ends up at the
+    wrong bearing, and nothing in a photograph says which one."""
+    out = []
+    for i in range(n):
+        a = start + 360.0 * i / n
+        out.append(mk(a, math.cos(math.radians(a)) * r,
+                         math.sin(math.radians(a)) * r))
+    return out
+
 LANDMARKS = {
   # --- what grows ---
   'pine':        T(2.10, 4.20, 300, 0.32, 140),
@@ -373,17 +387,74 @@ LANDMARKS = {
                        P(SPH, ROCK, 0.50, 0.50, 0.30, oz=78)]),
   'stone-heap':     K(SPH, ROCK, 1.25, 1.25, 0.50, 16, 360, 0.22),
   'rubble-heap':    K(SPH, ROCK, 1.35, 1.35, 0.45, 14, 360, 0.24),
+  # ---- A TIPPED HEAP IS LUMPY. A CONE IS A HEAP NOBODY TIPPED ----
+  #
+  # These three were smooth cones, and a smooth cone standing on grass is a
+  # party hat: the silhouette is right and everything else about it is wrong,
+  # because spoil and ore and ash are dumped in barrow-loads and settle into
+  # overlapping mounds rather than into one turned surface.
+  #
+  # `cairn`, `stone-heap` and `rubble-heap` a few lines up already knew this
+  # and are built from spheres. These now match them: a low spread with two
+  # smaller loads tipped onto it, off-centre, because nobody empties two
+  # barrows in the same place.
+  # NOTHING DRAWS THESE TWO EITHER. `spoil-heap` and `ore-heap` are handed the
+  # Nature kit's own rocks further down, the way `haystack` is handed Hay1, so
+  # these numbers are a fallback and not what stands in the world. They were
+  # authored into lumpy heaps first and the photograph came back identical,
+  # which is how it was found. `ash-heap` below them has no kit row and IS
+  # drawn from here, so that one is worth the parts.
   'spoil-heap':     K(CONE, ROCK, 1.70, 1.70, 0.85, 42, 360, 0.20),
   'ore-heap':       K(CONE, ROCK, 1.30, 1.30, 0.70, 35, 360, 0.20),
-  'ash-heap':       K(CONE, ROCK, 1.30, 1.30, 0.50, 25, 360, 0.20),
+  # AND THE SECOND LOAD HAS TO LAND OUTSIDE THE FIRST. These were tipped at
+  # twenty-five centimetres from the middle of a heap whose own base is
+  # sixty-five across, so both sat entirely INSIDE it and the silhouette came
+  # back exactly as smooth as the cone had been. A lump that does not break
+  # the outline is not a lump, it is a lump-shaped nothing.
+  'ash-heap':       K(SPH, ROCK, 1.30, 1.30, 0.44, 14, 360, 0.20,
+                      [P(SPH, ROCK, 0.76, 0.76, 0.30, ox=47, oy=-27, oz=9),
+                       P(SPH, ROCK, 0.50, 0.50, 0.22, ox=-51, oy=30, oz=6)]),
   'cut-face':       K(CUBE, ROCK, 1.90, 0.90, 1.60, 80, 0, 0.10),
   # --- what somebody left there ---
   'barrel':   K(CYL, TIMBER, 0.62, 0.62, 0.86, 43, 360, 0.10),
   'skep':     K(SPH, THATCH, 0.62, 0.62, 0.56, 22, 360, 0.10),
+  # A haystack keeps its cone, because a rick IS built to a cone and raked
+  # smooth to shed rain, which is the one case in this table where the smooth
+  # surface is the real thing. What it was missing is that a rick is BUILT: a
+  # straight-sided base course under the cone, and the rope over the top that
+  # stops the first gale taking it.
+  # NOTHING DRAWS THIS ROW. `landmark.haystack` is handed the Village kit's
+  # own `Hay1` further down the file, and that table runs later and wins, so
+  # the hay standing in the fields is kit art and not these numbers. Composing
+  # a rick here was tried and photographed and the picture did not change by
+  # one pixel, which is the same trap the note about two tables owning a word
+  # describes. The row stays as the fallback it is; it is not the thing to
+  # edit if the hay ever looks wrong.
   'haystack': K(CONE, THATCH, 1.80, 1.80, 1.90, 95, 360, 0.16),
   'peat-stack': K(CUBE, ROCK, 1.30, 0.90, 0.80, 40, 360, 0.12),
   'turf-stack': K(CUBE, CANOPY, 1.30, 0.90, 0.70, 35, 360, 0.12),
-  'withy-stack': K(CONE, TIMBER, 1.10, 1.10, 1.20, 60, 360, 0.16),
+  # ---- A WITHY STACK IS RODS LEANED TOGETHER ----
+  #
+  # A smooth cone in timber is a traffic cone, which is exactly how a row of
+  # these read in the fens. A withy stack is cut willow leaned into a cone and
+  # tied, so the rods ARE the shape: the cone is only what they enclose.
+  #
+  # So the cone shrinks and darkens to be the shadow inside, eight rods lean
+  # in around it, and a band ties them at the height a band goes.
+  # THE SIGN OF THE PITCH, which the first cut had backwards. A part is turned
+  # by its yaw to face its own bearing and then pitched, so a POSITIVE pitch
+  # takes the top of a rod outward and a negative one takes it in. At -11 the
+  # eight rods splayed into a fountain standing on a plate, which is not a
+  # stack of anything.
+  #
+  # The band sits at two thirds of the height, where a man ties one, and it is
+  # narrower than the spread of the rods. Wide and low it read as a table the
+  # rods were standing on rather than as a rope around them.
+  'withy-stack': K(CONE, TIMBER, 0.86, 0.86, 1.08, 54, 360, 0.16,
+                   [P(CYL, TIMBER, 0.72, 0.72, 0.035, oz=66)]
+                   + ring(8, 29.0, lambda a, x, y:
+                          P(CYL, TIMBER, 0.055, 0.055, 1.18, ox=x, oy=y,
+                            oz=59, yaw=a, pitch=13))),
   # ---- THREE LOGS, LYING DOWN ----
   #
   # A cylinder's axis is Z, so a log lying on the ground is a cylinder ROLLED
@@ -413,7 +484,40 @@ LANDMARKS = {
                 [P(CYL, TIMBER, 0.52, 0.52, 1.60, ox=56, oz=26, roll=90),
                  P(CYL, TIMBER, 0.52, 0.52, 1.60, ox=28, oz=71, roll=90)],
                 ) | {'lean': {'pitch': 0.0, 'yaw': 0.0, 'roll': 90.0}},
-  'stump':    K(CYL, TIMBER, 0.64, 0.64, 0.44, 22, 360, 0.18),
+  # ---- A STUMP IS A SAWN TRUNK, NOT A DRUM ----
+  #
+  # One smooth cylinder with a flat top, in timber, is a BARREL. Photographed
+  # in a field of them at Greenhollow they read as oil drums standing in the
+  # grass, and the eye has nothing to tell it otherwise: a stump's whole
+  # identity is the pale cut face on top and the roots flaring at the bottom,
+  # and this had neither.
+  #
+  # The cut face takes thatch rather than timber because sawn wood is lighter
+  # than bark, and thatch is the one warm pale colour in the table. Three
+  # roots, not four: an even number around a trunk reads as a machined thing.
+  # The cut face CAPS the trunk and is a shade wider than it. Sat narrower it
+  # left a ring of bark standing proud of a sunken disc, and a cylinder with a
+  # rim round an inset top is a TUB: the first cut of this read as an open
+  # barrel with something in it.
+  #
+  # And the flare is one collar, not three roots. Three little boxes poking
+  # out at the foot read as brackets bolted to a drum, which is further from a
+  # stump than the plain cylinder had been. A trunk widens into the ground all
+  # the way round, so the part that says so goes all the way round.
+  # AND THE SAW CUT IS NOT LEVEL. A cylinder with a flat top, however it is
+  # coloured, is a barrel: the proportion and the two parallel circles do the
+  # reading and nothing else gets a say. Four degrees of tilt on the cut costs
+  # one number and takes the whole barrel away, because no cooper ever made a
+  # lid that sat crooked. A felling cut is never level anyway.
+  #
+  # The collar is a FLARE, not a plinth. At 0.84 and seventeen centimetres it
+  # was a second cylinder with its own hard edge and the stump stood on it
+  # like an ornament on a base.
+  'stump':    K(CYL, TIMBER, 0.64, 0.64, 0.44, 22, 360, 0.18,
+                [P(CYL, TIMBER, 0.76, 0.76, 0.11, oz=5),
+                 P(CYL, THATCH, 0.67, 0.67, 0.05, oz=44, pitch=4),
+                 P(CUBE, THATCH, 0.09, 0.06, 0.15, ox=19, oy=11, oz=48,
+                   pitch=13, yaw=35)]),
   'windfall': K(SPH, CANOPY, 1.20, 1.10, 0.40, 14, 360, 0.20),
   'table':    K(CUBE, TIMBER, 1.30, 0.80, 0.10, 76, 0, 0.06, legs(55, 30, 72)),
   'bench':    K(CUBE, TIMBER, 1.20, 0.38, 0.09, 44, 0, 0.06, legs(48, 12, 40)),
@@ -485,9 +589,21 @@ LANDMARKS.update({
   'sawhorse':     K(CUBE, TIMBER, 1.00, 0.12, 0.12, 62, 360, 0.08,
                     [P(CUBE, TIMBER, 0.08, 0.50, 0.62, ox=-34, oz=31),
                      P(CUBE, TIMBER, 0.08, 0.50, 0.62, ox=34, oz=31)]),
+  # The same flat timber lid the stump had, and it is the same block of wood,
+  # so it takes the same answer: a pale cut face set a touch crooked. Without
+  # it this is a barrel with an axe stuck in the top.
   'chopping-block': K(CYL, TIMBER, 0.62, 0.62, 0.56, 28, 360, 0.12,
-                      [P(CUBE, ROCK, 0.08, 0.30, 0.34, oz=70, pitch=22)]),
-  'wood-chips':   K(CYL, TIMBER, 1.10, 1.10, 0.08, 4, 360, 0.20, None, False),
+                      [P(CYL, THATCH, 0.65, 0.65, 0.05, oz=56, pitch=3),
+                       P(CUBE, ROCK, 0.08, 0.30, 0.34, oz=70, pitch=22)]),
+  # A disc of timber lying flat is a LID, and that is what these read as next
+  # to the chopping block: seven wooden manhole covers in the grass. Chips are
+  # separate flakes thrown clear of the axe, and they are pale, because the
+  # inside of a log is lighter than its bark.
+  'wood-chips':   K(CUBE, THATCH, 0.17, 0.12, 0.02, 1, 360, 0.30,
+                    ring(7, 27.0, lambda a, x, y:
+                         P(CUBE, THATCH, 0.15, 0.10, 0.02,
+                           ox=x, oy=y, oz=1, yaw=a * 2.3)),
+                    False),
   'ladder':       K(CUBE, TIMBER, 0.09, 0.09, 2.40, 118, 360, 0.08,
                     [P(CUBE, TIMBER, 0.09, 0.09, 2.40, oy=44, oz=0)] +
                     [P(CUBE, TIMBER, 0.06, 0.46, 0.06, oy=22, oz=z) for z in (-80, -30, 20, 70)]),
@@ -516,7 +632,26 @@ LANDMARKS.update({
                        P(CUBE, TIMBER, 0.50, 0.11, 0.11, oz=26, yaw=-54)]),
   'scorched-ring':  K(CYL, ROCK, 1.40, 1.40, 0.05, 3, 360, 0.16, None, False),
   'daub-mark':      K(CUBE, STONE, 0.60, 0.06, 0.80, 96, 360, 0.10),
-  'peat-cut':       K(CUBE, ROCK, 1.80, 1.20, 0.30, -6, 0, 0.10),
+  # ---- A PEAT CUT IS A HOLE. THIS ONE STOOD PROUD OF THE GROUND ----
+  #
+  # Thirty centimetres tall and sunk only six, in rock, so it read as a pale
+  # paving slab dropped on the moor: the one thing a cut in the ground must
+  # never look like is something lying ON the ground. Photographed on the
+  # moor above Norwick it was a row of flagstones.
+  #
+  # Turned inside out. The bank is dark and mostly below the surface, which
+  # is what a trench with wet peat in it looks like from any distance, and
+  # the blocks that came OUT of it are stacked to dry on the lip. The blocks
+  # are the only part that catches light, so they are what reads.
+  # In rock the stacked blocks came out grey, so a peat cut read as a trench
+  # with three breeze blocks beside it. Peat is earth: the trench takes the
+  # soil the plot beds take, and the blocks take timber, which is the one
+  # brown in the table lighter than the wet ground they came out of.
+  'peat-cut':       K(CUBE, SOIL, 1.80, 1.20, 0.22, -9, 0, 0.10,
+                      [P(CUBE, TIMBER, 0.52, 0.34, 0.14, ox=-74, oy=-5, oz=12),
+                       P(CUBE, TIMBER, 0.52, 0.34, 0.14, ox=-74, oy=2, oz=26),
+                       P(CUBE, TIMBER, 0.52, 0.34, 0.14, ox=74, oy=6, oz=12)],
+                      False),
   'slag-lump':      K(SPH, ROCK, 0.70, 0.70, 0.42, 14, 360, 0.24),
   # A SHOT-HOLE IS THE HOLE, not the rock it was drilled in. It was a squat
   # rock cylinder and so it was a pebble. The rim stays and the bore is dark.
