@@ -196,6 +196,30 @@ PARTS = {}
 FACING = {}     # word -> camera yaw in degrees
 STAND = {}      # word -> (roll, pitch, yaw) for the actor
 
+# ---- AND WHICH OF ITS TWO FACES, WHERE COLOUR CANNOT TELL ----
+#
+# The front is chosen below by photographing both faces and keeping the one
+# showing MORE of the item's colours, which is sound when the two sides differ:
+# the face of a shield is oak and iron and the back is the same metal all over.
+#
+# It cannot work when the whole item is ONE colour. A quick-grade shield is
+# tinted pale blue on every slot, both faces measure the same, and the choice
+# is a coin toss. Keyed by word; 0 is the first face, 1 is the other.
+#
+# A ROLL override was written alongside this and taken out again: composing a
+# rotator onto the turn spins the item about its OWN axis, not about the view,
+# so five different rolls photographed identically. If a flat item ever needs
+# turning in the picture plane it will have to be done where the camera is
+# built, not here.
+FACE = {
+    # The Celtic shield is a tall oval with a boss and a frame on the front and
+    # a smooth dish on the back, and `quick` paints every slot of it the same
+    # pale blue. Both faces measured the same and the toss came up the back, so
+    # the handbook has been printing an empty dish. The heater shields are oak
+    # and iron and win the measurement honestly.
+    'quick-shield': 1,
+}
+
 
 def shoot(w, mesh_path, name):
     mesh = unreal.EditorAssetLibrary.load_asset(mesh_path)
@@ -672,7 +696,10 @@ def shoot(w, mesh_path, name):
         # across it, and the back of one is the same metal all over. Two extra
         # draws of one item into a 512-pixel target, and only for things flat
         # enough to have a front at all.
-        if faces:
+        if faces and name in FACE:
+            # Said outright, because the measurement below cannot tell.
+            place(faces[FACE[name] % len(faces)])
+        elif faces:
             c.capture_source = unreal.SceneCaptureSource.SCS_FINAL_COLOR_LDR
             c.show_flag_settings = unlit
             best, most = None, -1.0
