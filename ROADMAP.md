@@ -16,14 +16,32 @@ decision.
 The standing instruction, in the user's words: *"We have to make sure every
 single node type and kind in the world is drawn properly."*
 
-`Tools/audit.py` answers the first half and it is now clean:
+`Tools/audit.py` answers the first half. It had been dying on
+`KeyError: 'weapons'` for some time -- it read a snapshot of a running node
+and `Tools/scope.mjs` had replaced that with the engine's own export -- and
+now runs:
 
     weapons  37/37   armour 13/13   mobs 24/24
-    node types 52/52   node kinds 117/117   keepers 23/23   stalls 7/7
+    node types 66/66   keepers 23/23   stalls 7/7
 
-Every WORD the world uses has a row. What the audit's second half says is that
-**71 of 186 prop rows are still a scaled cube, cylinder, cone or sphere**, and
-that is the real backlog. Twelve of those were closed by pointing the keepers
+Every WORD the world uses has a row, and the window's own log agrees: a grep
+of `no mesh for it` comes back empty.
+
+**THIS COUNT IS MUCH SMALLER THAN IT WAS.** The audit's second half now says
+**10 of 200 prop rows are still an engine primitive**, with 23 more that are
+primitives on purpose. It said 71 of 186 when this file was written. The ten:
+
+    landmark.barricade   landmark.bridge-stone   landmark.chopping-block
+    landmark.ladder      landmark.log-pile       landmark.scaffold
+    landmark.sentinel    landmark.standing-stone landmark.stump
+    landmark.withy-stack
+
+And three of those ten -- chopping-block, stump, withy-stack -- have composed
+parts on them already and read correctly in a photograph; they are counted
+because their BASE mesh is a primitive, which is a measure of how they are
+built and not of how they look. The standing stones and the sentinel
+photograph as menhirs and are arguably finished too. Judge them from a
+capture before touching them. Twelve of those were closed by pointing the keepers
 at CC0 meshes this project already owns, which is the pattern for most of the
 rest: Quaternius' Fantasy Props MegaKit is imported, at real scale, and
 `/Game/Interval/Props` holds ninety-odd meshes nobody has wired.

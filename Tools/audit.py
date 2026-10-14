@@ -22,7 +22,22 @@ def call(tool, args):
 look = json.loads(json.loads(call('get_properties', {
     'instance': {'refPath': LOOK},
     'properties': ['Props', 'Mobs', 'Worn', 'Motions', 'Scatter', 'Palisades']}))['returnValue'])
-world = json.load(open(SCRATCH + '/world.json'))
+# ---- THE ENGINE'S OWN TABLES, NOT A SNAPSHOT OF A RUNNING WORLD ----
+#
+# This read `world.json`, which is a frame captured off a live node: the node
+# types and kinds that had been SEEN. `Tools/scope.mjs` exists because that is
+# a sample of a world and not its vocabulary, and its own header says so --
+# "they cannot be behind themselves, they cannot be a sample... Nothing else
+# should ever be asked."
+#
+# scope.mjs was written and this line was never moved to it, so the audit has
+# been dying on `KeyError: 'weapons'` ever since: the snapshot has no such key
+# and the export does. A tool that cannot run is a tool that cannot cry wolf,
+# and the roadmap tells the reader to run THIS rather than trust its own
+# summary.
+#
+#   node Tools/scope.mjs > scope.json
+world = json.load(open(SCRATCH + '/scope.json'))
 
 props = set(look['Props'])
 mobs = set(look['Mobs'])
@@ -131,9 +146,28 @@ ENGINE_TYPES = json.loads(subprocess.run(
     ['node', '-e', 'process.stdout.write(JSON.stringify('
                    'require("../interval-bridge/engine.js").NODE_TYPES))'],
     cwd=os.path.dirname(SP), capture_output=True, text=True, check=True).stdout)
-report('node types', ENGINE_TYPES, props)
-report('node kinds', [k.split('.', 1)[1] for k in world['frameKinds']], props,
-       'landmark.', 'keeper.', 'stall.', 'wall.')
+# PALISADE IS NOT MISSING, AND SAYING SO ONCE COST AN HOUR. It has a table of
+# its own -- `Palisades` -- which this already fetches and then did not look
+# at, so the audit reported the one word CLAUDE.md names as the standing
+# example of a false alarm. A word is drawn if ANY table draws it.
+report('node types', ENGINE_TYPES, props | set(look.get('Palisades') or ()))
+# ---- THE KINDS ARE NOT AUDITED HERE, AND THAT IS DELIBERATE ----
+#
+# This read `frameKinds` off a snapshot of a running node: the kinds that had
+# been SEEN in one frame. scope.mjs replaced that snapshot and does NOT export
+# a kinds list, and its own note says why -- a kind is a free string the
+# generator chooses and the engine has no table of them.
+#
+# So there is nothing honest to put here, and two things that already do the
+# job better. The window itself logs every word it is asked to stand up and
+# has no mesh for, which is the standing rule in CLAUDE.md:
+#
+#     grep "no mesh for it" /tmp/ue.log | sort -u
+#
+# and `Tools/undrawn.py` asks the generator what it can seat. Reading the
+# tables instead got this wrong twice in one hour.
+print('node kinds     see `grep "no mesh for it" /tmp/ue.log | sort -u`'
+      ' and Tools/undrawn.py')
 report('keepers', world['keeperKinds'], props, 'keeper.', 'stall.')
 report('stalls', world['stalls'], props, 'stall.', 'keeper.')
 
