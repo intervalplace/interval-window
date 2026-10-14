@@ -163,6 +163,33 @@ BEASTS = set()
 # idle the instant a beast is drawn. Filled from `beastposes.json`.
 POSES = {}
 
+# ---- AND WHICH SIDE OF IT TO STAND ON, WHERE THE RULE CANNOT TELL ----
+#
+# `broad` below picks the camera's yaw from the mesh's own proportions: look
+# along the short axis, because that is the side a creature is recognised
+# from. It is a good rule and it reads the BOUNDING BOX, so it is only as good
+# as the box. A skeletal mesh reports its animated extent, a static one may be
+# authored facing any way its artist liked, and either can leave a creature
+# photographed end-on and reading as a lump.
+#
+# `FACING` overrides the yaw for one creature. `STAND` turns the ACTOR instead,
+# for a mesh authored lying down, and is the only place a creature is ever
+# turned -- see the note in `shoot` about why that is otherwise forbidden.
+#
+# Both are keyed by the creature's world word and both are empty until a
+# photograph says otherwise. Add a reason with every entry.
+# EMPTY, AND NOT FOR WANT OF TRYING. Eight creatures were photographed at 0,
+# 90, 180 and 270 to find the yaw each one wants, and the sweep did not settle
+# them: the raven reads as a lump from every quarter and the mermaid's mesh has
+# the rocks she lies on inside its bounding box, so the frame is mostly scenery
+# whichever way the camera stands. Values were put here for both, rendered,
+# and taken out again because the picture did not agree with them.
+#
+# So the hook is real and the table is honestly empty. What those two need is
+# not a yaw.
+FACING = {}     # word -> camera yaw in degrees
+STAND = {}      # word -> (roll, pitch, yaw) for the actor
+
 
 def shoot(w, mesh_path, name):
     mesh = unreal.EditorAssetLibrary.load_asset(mesh_path)
@@ -262,7 +289,7 @@ def shoot(w, mesh_path, name):
         #
         # Twelve degrees down rather than thirty, because an animal is
         # recognised from near its own height.
-        broad = 180.0 if size.y >= size.x else 90.0
+        broad = FACING.get(name, 180.0 if size.y >= size.x else 90.0)
         look = unreal.Rotator(0.0, -12.0, broad)
     else:
         look = unreal.Rotator(0.0, -30.0, 135.0)
@@ -282,7 +309,8 @@ def shoot(w, mesh_path, name):
     # for anything that stands, which is the same reason a roughly cubic item
     # is left alone below.
     if name in BEASTS:
-        turn = unreal.Rotator(0.0, 0.0, 0.0)
+        turn = unreal.Rotator(*STAND[name]) if name in STAND \
+            else unreal.Rotator(0.0, 0.0, 0.0)
     elif flat > 0.40:
         turn = unreal.Rotator(0.0, 0.0, 0.0)
     else:
