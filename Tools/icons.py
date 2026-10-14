@@ -48,6 +48,11 @@ S = ('/private/tmp/claude-501/-Users-matsjulner-Documents-Unreal-Projects-interv
      'd4aebce9-c39a-4f8e-86ec-ab2848a159a1/scratchpad/')
 OUT = os.path.abspath(os.path.join(unreal.Paths.project_dir(), 'Art', 'Icons', 'raw'))
 SIDE = 512          # rendered big and reduced later: the reduction IS the anti-aliasing
+
+# WHERE A LONG THING POINTS, in degrees off screen-vertical. Everything in the
+# pack that has a long axis lands on this one diagonal, so a page of them reads
+# as a set rather than as a drawer somebody tipped out.
+DIAGONAL = 40.0
 FAR = 200000.0      # where the item is stood, well clear of the world
 
 report = {'done': [], 'errors': [], 'by_slot': [], 'spread': {}}
@@ -345,11 +350,37 @@ def shoot(w, mesh_path, name):
         turn = unreal.Rotator(0.0, 0.0, 0.0)
     else:
         thin = min(((size.x, 'x'), (size.y, 'y'), (size.z, 'z')))[1]
+        tall = max(((size.x, 'x'), (size.y, 'y'), (size.z, 'z')))[1]
         tipped = unreal.MathLibrary.rotate_angle_axis(
             fwd, 25.0, look.get_up_vector())
-        turn = {'x': unreal.MathLibrary.make_rot_from_x,
-                'y': unreal.MathLibrary.make_rot_from_y,
-                'z': unreal.MathLibrary.make_rot_from_z}[thin](tipped)
+        # ---- AND THE ROLL ABOUT THAT AXIS, WHICH WAS NOBODY'S DECISION ----
+        #
+        # `make_rot_from_y` pins exactly ONE axis. Where the other two end up
+        # is whatever the constructor's own arbitrary basis gives, and the
+        # answer is stable per mesh and unrelated between meshes -- so every
+        # family in the pack came to rest at its own angle. Laid out together
+        # the swords sit on one diagonal, the spears and javelins lie nearly
+        # flat, the pickaxes tilt a third way, and the whole sheet reads as
+        # though nobody chose any of it. Reported exactly that way: the angles
+        # are not coherent.
+        #
+        # So the LONGEST axis is pinned too, to one screen direction, with the
+        # two-axis constructors that exist for this. The thin axis still points
+        # at the camera -- that is what stops a flat thing reading as a stick
+        # and it is not in question -- and the long axis now lands on the same
+        # diagonal for everything that has one.
+        want = unreal.MathLibrary.rotate_angle_axis(
+            look.get_up_vector(), DIAGONAL, fwd)
+        MAKE = {
+            ('x', 'y'): unreal.MathLibrary.make_rot_from_xy,
+            ('x', 'z'): unreal.MathLibrary.make_rot_from_xz,
+            ('y', 'x'): unreal.MathLibrary.make_rot_from_yx,
+            ('y', 'z'): unreal.MathLibrary.make_rot_from_yz,
+            ('z', 'x'): unreal.MathLibrary.make_rot_from_zx,
+            ('z', 'y'): unreal.MathLibrary.make_rot_from_zy,
+        }
+        make = MAKE[(thin, tall)]
+        turn = make(tipped, want)
         # AND FROM THE FRONT OF IT, WHICH IS NOT DECIDED YET.
         #
         # Pointing the thinnest axis at the camera says which way the flat
@@ -365,9 +396,7 @@ def shoot(w, mesh_path, name):
         # and the band across it; its back is the same metal all over with two
         # straps on it. A bow, which is the other thing this turning was
         # written for, is nearly the same from either side and does not care.
-        back = {'x': unreal.MathLibrary.make_rot_from_x,
-                'y': unreal.MathLibrary.make_rot_from_y,
-                'z': unreal.MathLibrary.make_rot_from_z}[thin](tipped * -1.0)
+        back = make(tipped * -1.0, want)
         faces = [turn, back]
 
     # THE GRADE, PAINTED ONTO THE METAL AND NOTHING ELSE.
