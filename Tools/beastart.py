@@ -31,7 +31,7 @@ def main():
     raw = call('editor_toolset.toolsets.object.ObjectTools', 'get_properties',
                {'instance': {'refPath': LOOK}, 'properties': ['Mobs']})
     mobs = json.loads(json.loads(raw)['returnValue'])['Mobs']
-    out, lack, poses = {}, [], {}
+    out, lack, poses, parts = {}, [], {}, {}
     for name in sorted(mobs):
         # `incursion.haunt` and the rest are faces of `incursion`, not
         # creatures of their own.
@@ -42,6 +42,26 @@ def main():
                            json.dumps(row))
         if found:
             out[name] = found[0]
+            # ---- AND THE REST OF THE BODY ----
+            #
+            # A person in this world is not one mesh. `skeletal` is the HEAD
+            # and `skeletalParts` carries what is worn on the same skeleton,
+            # exactly as a citizen's clothes are, so `Risen_Male` on its own
+            # is a bald head and a pair of shoulders and nothing else. Handing
+            # the renderer only `found[0]` is how the barrow wight, the risen,
+            # the incursion and both gibbet corpses came to be printed as
+            # busts floating in the air.
+            #
+            # Five of the twenty-four creatures are built this way and all
+            # five were wrong. The parts travel with the mesh now and the
+            # renderer stands them in the same place on the same frame.
+            kit = []
+            for piece in (row.get('skeletalParts') or []):
+                ref = piece.get('refPath') if isinstance(piece, dict) else None
+                if ref:
+                    kit.append(ref)
+            if kit:
+                parts[name] = kit
             # ---- AND THE POSE IT STANDS IN ----
             #
             # These are SKELETAL meshes and the pack rigs them flat: the bind
@@ -62,7 +82,9 @@ def main():
             lack.append(name)
     json.dump(out, open(S + 'beasts.json', 'w'), indent=1)
     json.dump(poses, open(S + 'beastposes.json', 'w'), indent=1)
-    print('%d creatures, %d have a mesh' % (len(out) + len(lack), len(out)))
+    json.dump(parts, open(S + 'beastparts.json', 'w'), indent=1)
+    print('%d creatures, %d have a mesh, %d wear parts'
+          % (len(out) + len(lack), len(out), len(parts)))
     if lack:
         print('  no mesh: %s' % ' '.join(lack))
     return 0

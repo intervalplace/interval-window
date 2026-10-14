@@ -187,6 +187,12 @@ POSES = {}
 #
 # So the hook is real and the table is honestly empty. What those two need is
 # not a yaw.
+# WHAT ELSE A CREATURE IS WEARING. A person in this world is a HEAD plus the
+# parts hung on the same skeleton, the way a citizen's clothes are, so the
+# risen's `Risen_Male` on its own is a bald head and a pair of shoulders.
+# Filled from `beastparts.json`; see the note in beastart.py.
+PARTS = {}
+
 FACING = {}     # word -> camera yaw in degrees
 STAND = {}      # word -> (roll, pitch, yaw) for the actor
 
@@ -358,6 +364,19 @@ def shoot(w, mesh_path, name):
         unreal.Vector(mid.x, mid.y, mid.z), turn)
     actor = unreal.EditorLevelLibrary.spawn_actor_from_object(mesh, here - spun)
     actor.set_actor_rotation(turn, False)
+    # The rest of the body, standing in the same place on the same frame. They
+    # share a skeleton and nothing here animates, so the reference pose lines
+    # them up without a leader-pose component -- which is as well, since this
+    # editor's Python cannot add one.
+    worn = []
+    for ref in PARTS.get(name, []):
+        piece = unreal.EditorAssetLibrary.load_asset(ref)
+        if not piece:
+            report['errors'].append('%s: no part at %s' % (name, ref))
+            continue
+        a2 = unreal.EditorLevelLibrary.spawn_actor_from_object(piece, here - spun)
+        a2.set_actor_rotation(turn, False)
+        worn.append(a2)
     # ---- POSED BEFORE IT IS PHOTOGRAPHED ----
     #
     # See the note on POSES. Without this the picture is the bind pose, which
@@ -400,6 +419,19 @@ def shoot(w, mesh_path, name):
                 # standing -- the Body bone measures 86 cm up -- so this is
                 # an ugly pose and not an upside-down one.
                 #
+                # FIVE WAYS WERE TRIED AND THE BONE DID NOT MOVE ONCE. The
+                # Body bone's transform came back byte-identical from every
+                # one of them, so this is not a matter of finding the right
+                # call:
+                #
+                #   1. set_animation + play + set_position
+                #   2. play_animation, the Blueprint node
+                #   3. visibility_based_anim_tick_option, always tick
+                #   4. all of the above and then READ IT BACK IN A LATER
+                #      PYTHON CALL, thousands of editor ticks afterwards
+                #   5. set_component_tick_enabled + set_tickable_when_paused
+                #      + set_actor_tick_enabled, looping the clip
+                #
                 # The way out is a PoseableMeshComponent with the bones read
                 # off the clip by AnimationLibrary.get_bone_poses_for_time,
                 # and BOTH of those exist. What does not exist is any way to
@@ -437,8 +469,9 @@ def shoot(w, mesh_path, name):
         # leaves the frame; see the note above.
         off = unreal.MathLibrary.greater_greater_vector_rotator(
             unreal.Vector(mid.x, mid.y, mid.z), t)
-        actor.set_actor_location(here - off, False, False)
-        actor.set_actor_rotation(t, False)
+        for a in [actor] + worn:
+            a.set_actor_location(here - off, False, False)
+            a.set_actor_rotation(t, False)
     cam = unreal.EditorLevelLibrary.spawn_actor_from_class(
         unreal.SceneCapture2D, here, unreal.Rotator(0, 0, 0))
     try:
@@ -690,6 +723,8 @@ def shoot(w, mesh_path, name):
     finally:
         unreal.EditorLevelLibrary.destroy_actor(cam)
         unreal.EditorLevelLibrary.destroy_actor(actor)
+        for a in worn:
+            unreal.EditorLevelLibrary.destroy_actor(a)
 
 
 def main():
@@ -745,6 +780,8 @@ def main():
         BEASTS.update(beasts)
     if os.path.exists(S + 'beastposes.json'):
         POSES.update(json.load(open(S + 'beastposes.json')))
+    if os.path.exists(S + 'beastparts.json'):
+        PARTS.update(json.load(open(S + 'beastparts.json')))
     # A FILE, NOT AN ENVIRONMENT VARIABLE: this runs inside the editor's own
     # interpreter, which was started hours ago and knows nothing of the shell
     # that asked for the render.
