@@ -141,10 +141,26 @@ print('dressed:', made, 'slots')
 PERSON = '/Game/Interval/Materials/M_IntervalPerson.M_IntervalPerson'
 SM = 'editor_toolset.toolsets.static_mesh.StaticMeshTools'
 
+# ---- THE TEXTURE, NOT THE MATERIAL NAMED AFTER IT ----
+#
+# This said 'Atlas' and 'Atlas_Diffuse', which are the MATERIALS the glTF
+# import built. The texture they sample is `base_color_texture`, which is what
+# interchange calls it and what every one of these three carries.
+#
+# So `set_texture_parameter` was handed a material where it wanted a texture,
+# answered "is not valid Texture for property 'value'", and that answer went
+# nowhere: this script does not look at what rpc.call returns. The instances
+# came out with NO texture parameters at all -- nine scalars and nothing else
+# -- and M_IntervalPerson with no base colour is black.
+#
+# That is why the carrion crow and the siren printed as dark lumps in the
+# handbook while their depth passes showed a crow with a beak and a tail and a
+# figure among rocks. The camera was right, the framing was right, the mesh was
+# right, and the colour was never connected.
 SHEETED = {
-    'raven':    'Atlas',
-    'mermaid':  'Atlas_Diffuse',
-    'goblin_d': 'Atlas_Diffuse',
+    'raven':    'base_color_texture',
+    'mermaid':  'base_color_texture',
+    'goblin_d': 'base_color_texture',
 }
 for beast, sheet in SHEETED.items():
     mesh = '%s%s/%s.%s' % (WILD, beast, beast, beast)
@@ -155,8 +171,13 @@ for beast, sheet in SHEETED.items():
     rpc.call(MI, 'create', {'folder_path': WILD + beast, 'asset_name': name,
                             'parent': {'refPath': PERSON}})
     for slot in ('BaseColorTexture', 'ORMTexture'):
-        rpc.call(MI, 'set_texture_parameter', {'instance': {'refPath': path},
-                 'name': slot, 'value': {'refPath': tex}})
+        # LOOKED AT, because the last time this was not, a wrong asset name
+        # failed silently for however long it took somebody to notice two
+        # creatures were black in a printed book.
+        said = rpc.call(MI, 'set_texture_parameter', {'instance': {'refPath': path},
+                        'name': slot, 'value': {'refPath': tex}})
+        if 'not valid' in str(said) or 'error' in str(said).lower():
+            print('  %s %s: %s' % (beast, slot, str(said)[:90]))
     for param, v in (('Strength', 0.0), ('Puff', 0.0), ('Cut', -100000.0),
                      ('HairTint', 0.0), ('MetalMax', 0.0), ('RoughFloor', 0.86),
                      ('Sway', 0.0), ('Lift', 1.0), ('AOFloor', 1.0)):

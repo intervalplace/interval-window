@@ -2469,6 +2469,17 @@ if 'risen' not in have['Mobs'] and 'barrow-wight' in have['Mobs']:
     import copy as _copy
     have['Mobs']['risen'] = _copy.deepcopy(have['Mobs']['barrow-wight'])
     have['Mobs']['risen']['scale'] = {'x': 0.98, 'y': 0.98, 'z': 0.98}
+    # ...BUT NOT ITS CLOTHES. Borrowing the body is the point; borrowing the
+    # outfit too made the two of them the same picture under two names, and
+    # that is what was reported from the printed bestiary. A barrow wight is a
+    # lord buried in his mail and a risen is a dead villager, and `BEASTS` says
+    # so for both -- this row simply never reached that loop, because the loop
+    # skips a word with no Mobs row and this one is created afterwards.
+    _ro = BEASTS.get('risen')
+    _outfit = _ro[3] if _ro and len(_ro) > 3 else None
+    have['Mobs']['risen']['skeletalParts'] = (
+        [{'refPath': '%s%s.%s' % (UNI_PEOPLE, _outfit, _outfit)}]
+        if _outfit else [])
 
 # WHICH WORDS THE BESTIARY NEVER REACHED.
 #

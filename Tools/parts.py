@@ -3054,11 +3054,26 @@ BEASTS = {
   # place. What reads right is the citizens' OWN body, uncut and drained of
   # colour: see `Pallor` in person_mat.hlsl, and Risen_* which is a copy of the
   # base figure so that dressing a corpse cannot touch the living.
+  # AND THEY ARE NOT ALL THE SAME DEAD MAN. Three of these five wore
+  # `Male_Peasant` and two wore `Male_Ranger`, so a reader met five names in
+  # the bestiary and four pictures of one villager. Reported from the page:
+  # "the gibbet king and undead etc all use the same basic human".
+  #
+  # The fix is not to abandon the idea above -- it is right, and a cartoon
+  # skeleton was tried and was worse -- but to bury each of them in what they
+  # died in. The wardrobe already has six bodies and this used two.
   'risen':          ('Risen_Male',   1.00,  0.0, 'Male_Peasant'),
-  'barrow-wight':   ('Risen_Male',   1.08,  0.0, 'Male_Peasant'),
+  # A barrow is a lord's grave. He is buried in his mail, which is also what
+  # tells him from the risen standing next to him on the page.
+  'barrow-wight':   ('Risen_Male',   1.08,  0.0, 'Male_Knight_Cloth'),
   'gibbet-dead':    ('Risen_Female', 1.00,  0.0, 'Female_Peasant'),
   # The king of the gibbets keeps a hood, being the one who raises the rest.
   'gibbet-king':    ('Risen_Male',   1.18,  0.0, 'Male_Ranger'),
+  # NOTHING READS THIS ROW. `DARK_BEASTS` further down gives skeleton-knight
+  # the Dark pack's `Skeleton_B`, which is an actual skeleton and is right, and
+  # that table runs later and wins. It was edited here first and the picture
+  # came back unchanged, which is the trap `Tools/whodraws.py --dead` exists
+  # for and which was not run before reaching for this line.
   'skeleton-knight':('Risen_Male',   1.04,  0.0, 'Male_Ranger'),
 }
 
