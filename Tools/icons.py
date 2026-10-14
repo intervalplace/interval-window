@@ -389,7 +389,27 @@ def shoot(w, mesh_path, name):
                 # SceneCapture2D is not "rendered" by that test. So this is
                 # the right thing to ask for and it is asked for here.
                 #
-                # IT IS NOT WHAT WAS WRONG WITH THE BESTIARY, and this note
+                # AND IT IS NOT ENOUGH. Proved with a probe rather than
+                # guessed: the Body bone's transform is byte-identical before
+                # the clip is set, after set_animation + play + set_position,
+                # and after play_animation, while has_valid_animation_instance
+                # answers true. A skeletal mesh component in the editor is
+                # never ticked, and none of the three ways Python can ask for
+                # a pose makes it evaluate. The goblin, the troll and the
+                # scree imp are therefore photographed in a T-pose. They are
+                # standing -- the Body bone measures 86 cm up -- so this is
+                # an ugly pose and not an upside-down one.
+                #
+                # The way out is a PoseableMeshComponent with the bones read
+                # off the clip by AnimationLibrary.get_bone_poses_for_time,
+                # and BOTH of those exist. What does not exist is any way to
+                # put a PoseableMeshComponent on an actor from editor Python
+                # in 5.8: `Actor` has no add_component_by_class and there is
+                # no PoseableMeshActor. It would have to go through a Blueprint
+                # made for the purpose. Written down so the next person does
+                # not spend the afternoon finding that out again.
+                #
+                # IT IS NOT WHAT WAS WRONG WITH THE BESTIARY EITHER, and this note
                 # says so because the first version of it claimed otherwise.
                 # The creatures were upside down because the CAMERA was built
                 # with the wrong argument order; see the long note above. This
