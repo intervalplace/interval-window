@@ -1171,6 +1171,70 @@ def spade():
     return m, 'spade'
 
 
+# ---------------------------------------------------------------------------
+# THE CARRION CROW, WHICH WAS A PARROT.
+#
+# `carrion-crow` was drawn with `raven.glb`, and that file holds one mesh named
+# "Ernest": a blue and green bird with a white face and an orange beak. It had
+# been invisible for as long as it was, because the material it was dressed in
+# never got its texture connected and the bird rendered black. Connecting the
+# texture is what showed what it had been all along.
+#
+# Nothing on poly.pizza replaces it. "crow" is CC-BY only; "raven" returns the
+# same Ernest; "blackbird" returns `Pigeon_Blob_Eyes` and `Birb_Blob`, which are
+# cartoon blobs and are the same mistake as the chibi adventurers.
+#
+# So it is forged, which is what this file is for. PERCHED, not flying: the
+# crow in this world stands on a gibbet, and there is already a forged bird
+# with its wings out for the ones in the sky -- see `bird` above and
+# `BirdMesh` in apply.py.
+#
+# 45 cm beak to tail, which is a carrion crow. Feather is (0.149, 0.145, 0.169)
+# in the palette, a near-black blue-grey, which is what a crow is.
+def crow():
+    m = Mesh()
+    # The body: a long egg lying along X, breast forward.
+    m.blob((0.0, 0.0, 12.0), 8.0, 'Feather', rings=5, segments=9,
+           squash=(1.60, 0.62, 0.70))
+    # The folded wings, lying along the body's sides and a little lower than
+    # its back. Folded is the whole point: a crow at rest is a smooth shape
+    # with two seams down it, not a silhouette with a span.
+    # They have to stand PROUD of the body or they are not wings, they are the
+    # body again: the first cut put them at 4.4 against a body half as wide as
+    # that and they vanished into it.
+    for side in (1.0, -1.0):
+        m.blob((-1.5, side * 5.4, 11.3), 7.8, 'Feather', rings=4, segments=7,
+               squash=(1.50, 0.24, 0.56))
+    # The tail, flat and SQUARE-ENDED, which is a carrion crow's and not a
+    # raven's wedge. Wide: the first cut was 6.6 across and came out as a stick
+    # pointing backwards, and a tail is the second thing after the beak that
+    # says which bird this is.
+    m.blob((-19.5, 0.0, 11.2), 7.4, 'Feather', rings=3, segments=7,
+           squash=(1.32, 0.78, 0.13))
+    # The head, set forward and a touch above the back. Bigger and closer in
+    # than the first cut, which left a small head on a long neck of nothing.
+    m.blob((11.9, 0.0, 16.2), 5.1, 'Feather', rings=4, segments=8,
+           squash=(1.02, 0.94, 0.92))
+    # THE BEAK IS MOST OF WHAT SAYS WHICH BIRD IT IS. Heavy and straight, and
+    # as long as the head, which is what a carrion crow has and a songbird does
+    # not. A tube rather than a lathe: a lathe revolves about Z and this points
+    # along X, and swapping the axes afterwards is how `bird` ends up doing its
+    # own vertices by hand.
+    m.tube([(15.6, 0.0, 16.2), (19.2, 0.0, 15.8), (22.4, 0.0, 15.0)],
+           [1.65, 1.05, 0.18], 7, 'Keratin')
+    # Two legs, and they are what make it PERCHED rather than floating.
+    for side in (1.0, -1.0):
+        m.tube([(1.0, side * 2.4, 7.4), (0.6, side * 2.6, 3.4),
+                (0.4, side * 2.6, 0.0)], [0.95, 0.72, 0.62], 5, 'Keratin')
+        # and a foot, three toes forward and nothing behind, at this size
+        for toe in (-26.0, 0.0, 26.0):
+            a = math.radians(toe)
+            m.tube([(0.4, side * 2.6, 0.5),
+                    (0.4 + 3.4 * math.cos(a), side * 2.6 + 3.4 * math.sin(a), 0.4)],
+                   [0.55, 0.22], 4, 'Keratin')
+    return m, 'crow'
+
+
 PIECES = (web, wolf_mask, hare_mask, hart_mask, raven_mask,
           gold_legs, bone_pile, skull_pile, sheep_skull, horn, siege_engine,
           torc_iron, torc_gold, old_chain, gold_chain, fishing_rod,
@@ -1178,7 +1242,7 @@ PIECES = (web, wolf_mask, hare_mask, hart_mask, raven_mask,
           crossbow, great_crossbow, star_flail, barb, bone_staff, goo_staff,
           bird,
           king_shroud, javelin, shot, star_grit, horn_bow, hollow_bow,
-          spade)
+          spade, crow)
 
 if __name__ == '__main__':
     for fn in PIECES:

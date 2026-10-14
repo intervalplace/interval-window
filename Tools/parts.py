@@ -3242,7 +3242,13 @@ WILD_STILL = {
   # across and a siren stood a hundred and eighty-seven metres out of the sea.
   # The intent these numbers were written with is unchanged -- a 0.44 m crow,
   # a 1.87 m siren -- and only the hundred has gone.
-  'carrion-crow':   ('raven',    0.0058, 32.0, (0.0, 0.0, 0.0)),
+  # `carrion-crow` IS NOT HERE ANY MORE. `raven.glb` holds one mesh named
+  # "Ernest", which is a blue and green bird with a white face and an orange
+  # beak, and it was invisible for as long as it was only because its material
+  # never got its texture connected. Nothing on poly.pizza replaces it: "crow"
+  # is CC-BY only, "raven" returns the same Ernest, and "blackbird" returns two
+  # cartoon blobs. So it is forged and wired in apply.py, perched, 48 cm beak
+  # to tail. See `crow` in make_art.py.
   'siren':          ('mermaid',  0.0068,  0.0, (0.0, 0.0, 0.0)),
   # THE BEAR ARRIVES LYING DOWN. Measured, not guessed: 247 cm long, 198 cm
   # through, and 51 cm from top to bottom -- which is a bear on its side, or

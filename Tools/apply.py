@@ -2572,6 +2572,22 @@ for _word, (_folder, _scale, _z, _lean) in WILD_STILL.items():
     _m['zOffset'] = _z
     _m['yawJitter'] = 360.0
 
+# AND THE CROW, WHICH IS FORGED AND SO HAS NO WILD FOLDER.
+#
+# It stood in WILD_STILL with the siren until the texture that had been hiding
+# it was connected and it turned out to be a parrot. Perched, forged at its own
+# size, so the scale is one and the feet are already at zero.
+if 'carrion-crow' in have['Mobs']:
+    _c = have['Mobs']['carrion-crow']
+    _c['mesh'] = {'refPath': '/Game/Interval/Forged/crow.crow'}
+    _c['skeletal'] = 'None'
+    _c['skeletalParts'] = []
+    _c['material'] = None
+    _c['scale'] = {'x': 1.0, 'y': 1.0, 'z': 1.0}
+    _c['zOffset'] = 0.0
+    _c['yawJitter'] = 360.0
+    _c['lean'] = {'pitch': 0.0, 'yaw': 0.0, 'roll': 0.0}
+
 # THE INCURSION'S FIVE FACES, which the table has no rows for at all.
 #
 # `incursion` is a TYPE and the creature is under it: the world sends `face`
