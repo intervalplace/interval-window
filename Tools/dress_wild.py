@@ -54,7 +54,27 @@ FALLBACK = {
     'ogre': {'r': 0.150, 'g': 0.165, 'b': 0.128},
 }
 
+# ---- AND A COLOUR TOO DARK TO BE A COLOUR ----
+#
+# FALLBACK above is for a slot whose file says nothing. This is for one whose
+# file says almost nothing: the scree imp's `Ghost_Main` arrives at
+# (0.018, 0.004, 0.023), which is fifteen times darker than the very same
+# mesh's secondary slot and is black on any page. The imp printed in the
+# handbook as a floating tan patch with two black smears either side of it,
+# while its DEPTH pass showed a winged creature with a body and a head: the
+# camera, the framing and the geometry were all correct and the body was
+# painted out.
+#
+# Keyed by creature AND slot, because the imp's other slot is a perfectly
+# ordinary (0.301, 0.21, 0.134) and must not be touched. A dusky violet-grey:
+# dark and cold, which is what a thing called a ghost should be, and visible,
+# which it was not.
+TOO_DARK = {
+    ('monster_a', 'Ghost_Main'): {'r': 0.105, 'g': 0.085, 'b': 0.135},
+}
+
 made = 0
+lifted = []
 for beast in sorted(os.listdir(ROOT)):
     mesh = '%s%s/%s.%s' % (WILD, beast, beast, beast)
     if not os.path.isfile(os.path.join(ROOT, beast, beast + '.uasset')):
@@ -107,6 +127,10 @@ for beast in sorted(os.listdir(ROOT)):
             # and beats inventing a colour for every creature that already
             # brought one.
             rgb = FALLBACK.get(beast, {'r': 0.18, 'g': 0.18, 'b': 0.18})
+        elif (beast, name) in TOO_DARK:
+            # Read, and read as very nearly nothing. See TOO_DARK above.
+            rgb = TOO_DARK[(beast, name)]
+            lifted.append('%s/%s' % (beast, name))
         made_name = 'MW_%s_%s' % (beast, name)
         path = '%s%s/%s.%s' % (WILD, beast, made_name, made_name)
         rpc.call(AS, 'delete', {'path': path.split('.')[0]})
@@ -194,3 +218,6 @@ for beast, sheet in SHEETED.items():
                                       'material': {'refPath': path}})
     rpc.call(AS, 'save_assets', {'asset_paths': [mesh.split('.')[0]]})
     print('%-10s -> %s (%d slots)' % (beast, name, len(slots)))
+
+if lifted:
+    print('lifted out of a near-black: %s' % ', '.join(lifted))
