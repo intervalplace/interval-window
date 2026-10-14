@@ -190,15 +190,26 @@ POSES = {}
 # whichever way the camera stands. Values were put here for both, rendered,
 # and taken out again because the picture did not agree with them.
 #
-# So the hook is real and the table is honestly empty. What those two need is
-# not a yaw.
+# So the hook is real, and it stayed empty until there was something it could
+# honestly place. What the raven and the mermaid need is not a yaw.
+#
+# THE THREE BELOW ARE WHY IT EARNS ITS KEEP. `broad` only ever answers 90 or
+# 180, because it is choosing which of the two LONG sides to stand on. A
+# creature that faces neither way is photographed from behind however good
+# that rule is. These three face 270: swept at all four angles and settled by
+# looking, which is the only way anything in this file is ever settled.
+
 # WHAT ELSE A CREATURE IS WEARING. A person in this world is a HEAD plus the
 # parts hung on the same skeleton, the way a citizen's clothes are, so the
 # risen's `Risen_Male` on its own is a bald head and a pair of shoulders.
 # Filled from `beastparts.json`; see the note in beastart.py.
 PARTS = {}
 
-FACING = {}     # word -> camera yaw in degrees
+FACING = {          # word -> camera yaw in degrees
+    'goblin': 270.0,     # grinning, club in hand; at 90 it is a green back
+    'troll': 270.0,      # at 90 it is a wall of shoulders and no face at all
+    'scree-imp': 270.0,  # wings out and its face up, not a wing seen edge-on
+}
 STAND = {}      # word -> (roll, pitch, yaw) for the actor
 
 # ---- AND WHICH OF ITS TWO FACES, WHERE COLOUR CANNOT TELL ----
@@ -838,6 +849,31 @@ def main():
         POSES.update(json.load(open(S + 'beastposes.json')))
     if os.path.exists(S + 'beastparts.json'):
         PARTS.update(json.load(open(S + 'beastparts.json')))
+    # ---- AND THE ONES THAT WERE POSED IN BLENDER ----
+    #
+    # A skeletal mesh component in this editor never evaluates its animation,
+    # so a creature with an idle is photographed in its bind pose and the
+    # bestiary printed a goblin, a troll and an imp standing in a T-pose. Five
+    # ways of asking were tried and the bone did not move once; the note is
+    # further up this file.
+    #
+    # `Tools/posebake.py` applies each one's own idle in Blender and writes a
+    # static copy, and `import_posed.py` brings it in wearing the same material
+    # instances the living creature wears. Here it simply replaces the mesh
+    # this renderer is pointed at.
+    #
+    # Its POSE and its PARTS go with it: a static mesh has no skeleton to
+    # animate and nothing to hang a second mesh on, and leaving either behind
+    # would have the renderer trying both on a thing that cannot take them.
+    if os.path.exists(S + 'posed.json'):
+        for row in (json.load(open(S + 'posed.json')).get('meshes') or ()):
+            word, path = row.get('name'), row.get('path')
+            if not word or not path or word not in have:
+                continue
+            have[word] = path
+            POSES.pop(word, None)
+            PARTS.pop(word, None)
+            note('%s is photographed from its posed copy' % word)
     # A FILE, NOT AN ENVIRONMENT VARIABLE: this runs inside the editor's own
     # interpreter, which was started hours ago and knows nothing of the shell
     # that asked for the render.
