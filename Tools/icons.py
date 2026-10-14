@@ -865,21 +865,31 @@ def main():
     # Its POSE and its PARTS go with it: a static mesh has no skeleton to
     # animate and nothing to hang a second mesh on, and leaving either behind
     # would have the renderer trying both on a thing that cannot take them.
-    # NOT ALL OF THEM, AND THE FIVE LEFT OUT ARE LEFT OUT FOR A REASON.
+    # ---- THREE OF THE EIGHT ARE USED, AND WHY NOT THE OTHER FIVE ----
     #
-    # The three Wild creatures wear flat colours on M_IntervalFlat and come
-    # through perfectly. The five corpses wear TEXTURED materials on
-    # M_IntervalPerson, and on a static mesh those render exactly neutral:
-    # the posed risen photographs as a bare grey body in a walking stance with
-    # its clothes invisible, and the grey guard refuses it, correctly.
+    # The goblin, the troll and the scree imp come through perfectly. The five
+    # corpses bake, import and bind correctly and are NOT used, and the reason
+    # has been narrowed twice and is still not the whole story.
     #
-    # It is not the geometry and it is not the UVs. The clothes are in the
-    # file -- 8,964 faces of MI_Peasant on the risen -- the slots are all
-    # bound, and the OBJ carries 14,007 texture coordinates that its faces
-    # reference. The same materials on the same art render in colour when the
-    # mesh is SKELETAL. Whatever M_IntervalPerson wants that a static mesh
-    # does not give it has not been found, so the five keep the rigged path
-    # and their T-pose until it is.
+    # It was first written down as "textured materials render neutral on a
+    # static mesh". That was wrong: photographed on its own, the posed risen
+    # comes back clothed and in colour.
+    #
+    # What is actually true, measured: all THREE raw passes have colour. The
+    # albedo spreads 7.8, the normal 24.7, the depth 20.9, and the depth plainly
+    # shows a figure standing in a relaxed pose. It is the COMPOSED sprite that
+    # measures exactly neutral, so matte.py's grey guard refuses it, and the
+    # five keep the sprites they already had.
+    #
+    # Ruled out along the way: the geometry (8,964 faces of MI_Peasant are in
+    # the file), the UVs (14,007 coordinates, referenced), the material binding
+    # (identical to the skeletal asset's), the shader warm (it renders in
+    # colour when asked alone), and the tier tint (tier_of is None for every
+    # one of them). What is left is something in the composite itself, and it
+    # has not been found.
+    #
+    # The five are clothed and distinct on the rigged path, so what is lost is
+    # the pose and nothing else.
     POSED_SKIP = {'risen', 'barrow-wight', 'gibbet-dead', 'gibbet-king',
                   'incursion'}
     if os.path.exists(S + 'posed.json'):
