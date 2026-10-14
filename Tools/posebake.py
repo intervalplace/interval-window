@@ -53,6 +53,32 @@ WANT = {
     'scree-imp': ('monster_a',  90.0),
 }
 
+# ---- AND THE FIVE THAT HAVE NO ANIMATION OF THEIR OWN ----
+#
+# The risen, the barrow wight, the incursion and both gibbet corpses are built
+# the way a citizen is: a bare body with an outfit following its pose. Neither
+# half carries a clip, so there is nothing of theirs to bake -- but they are on
+# the citizens' skeleton, and the Universal pack ships `Idle_Loop` for exactly
+# that rig. Proved before it was built on: the action was assigned to the
+# peasant's armature and a vertex of its body moved.
+#
+# The heights are 181 cm, which is what make_art.py measures a citizen at,
+# times the scale the Mobs row already gives each of them.
+PEOPLE = {
+    'risen':        ('Superhero_Male_FullBody',   'Male_Peasant',      177.0),
+    'barrow-wight': ('Superhero_Male_FullBody',   'Male_Knight_Cloth', 196.0),
+    'gibbet-dead':  ('Superhero_Female_FullBody', 'Female_Peasant',    181.0),
+    'gibbet-king':  ('Superhero_Male_FullBody',   'Male_Ranger',       214.0),
+    'incursion':    ('Superhero_Male_FullBody',   'Male_Ranger',       208.0),
+}
+PEOPLE_ANIM = ('Anims/UAL1_Standard.glb', 'Idle_Loop')
+
+# Male_Peasant.gltf and its kind also carry an `Icosphere`, which is a helper
+# and not a person. It has 42 vertices and sampling it instead of the body is
+# how an early probe reported that the pose had not moved anything.
+NOT_A_PERSON = ('icosphere',)
+
+
 # A QUARTER OF THE WAY IN, not frame zero. The first frame of an idle is very
 # often still the rest pose, which is the thing this script exists to get away
 # from; a quarter is past it and is not yet anywhere expressive.
@@ -93,31 +119,7 @@ def obj_height(path):
     return hi - lo if hi > lo else 0.0
 
 
-def bake(word, stem, tall_cm):
-    clear()
-    src = os.path.join(SRC, stem + '.glb')
-    if not os.path.exists(src):
-        return '%s: no %s' % (word, src)
-    bpy.ops.import_scene.gltf(filepath=src)
-
-    arm = next((o for o in bpy.data.objects if o.type == 'ARMATURE'), None)
-    if arm is None:
-        return '%s: no armature' % word
-    act = idle_action()
-    if act is None:
-        return '%s: no idle among %s' % (word, [a.name for a in bpy.data.actions])
-
-    if arm.animation_data is None:
-        arm.animation_data_create()
-    arm.animation_data.action = act
-    lo, hi = act.frame_range
-    bpy.context.scene.frame_set(int(lo + (hi - lo) * ALONG))
-    bpy.context.view_layer.update()
-
-    meshes = [o for o in bpy.data.objects if o.type == 'MESH']
-    if not meshes:
-        return '%s: no mesh' % word
-
+def export(word, meshes, tall_cm, how):
     # ---- TO THE SIZE THE WORLD ALREADY CHOSE ----
     #
     # Measured off the POSED mesh and not off the rig: a rig's bounds are its
@@ -184,13 +186,97 @@ def bake(word, stem, tall_cm):
         write(scale * 100.0 * (tall_cm / got))
         got = obj_height(dest)
     return '%s -> %s  (%s, %.1f cm)' % (word, os.path.basename(dest),
-                                        act.name, got)
+                                        how, got)
+
+
+
+
+def bake(word, stem, tall_cm):
+    clear()
+    src = os.path.join(SRC, stem + '.glb')
+    if not os.path.exists(src):
+        return '%s: no %s' % (word, src)
+    bpy.ops.import_scene.gltf(filepath=src)
+
+    arm = next((o for o in bpy.data.objects if o.type == 'ARMATURE'), None)
+    if arm is None:
+        return '%s: no armature' % word
+    act = idle_action()
+    if act is None:
+        return '%s: no idle among %s' % (word, [a.name for a in bpy.data.actions])
+
+    if arm.animation_data is None:
+        arm.animation_data_create()
+    arm.animation_data.action = act
+    lo, hi = act.frame_range
+    bpy.context.scene.frame_set(int(lo + (hi - lo) * ALONG))
+    bpy.context.view_layer.update()
+
+    meshes = [o for o in bpy.data.objects if o.type == 'MESH']
+    if not meshes:
+        return '%s: no mesh' % word
+
+    return export(word, meshes, tall_cm, act.name)
+
+
+def person(word, base, outfit, tall_cm):
+    """A bare body plus the outfit that follows it, posed by a borrowed idle."""
+    clear()
+    uni = os.path.join(ROOT, 'Art', 'Universal')
+    for path in (os.path.join(uni, 'Base', base + '.gltf'),
+                 os.path.join(uni, 'Whole', outfit + '.gltf')):
+        if not os.path.exists(path):
+            return '%s: no %s' % (word, path)
+        bpy.ops.import_scene.gltf(filepath=path)
+
+    # WHAT THE ANIMATION PACK BRINGS WITH IT IS NOT PART OF THE PERSON. The
+    # standard animation .glb carries its own preview figure, so importing it
+    # adds `M_Main` and `M_Joints` to the scene and they were exported along
+    # with the corpse. Only the meshes that were here BEFORE it arrived are
+    # the person.
+    mine = set(o.name for o in bpy.data.objects if o.type == 'MESH')
+    anim, want = PEOPLE_ANIM
+    bpy.ops.import_scene.gltf(filepath=os.path.join(uni, anim))
+    act = next((a for a in bpy.data.actions if a.name == want), None)
+    if act is None:
+        return '%s: no %s in %s' % (word, want, anim)
+
+    # EVERY armature, because the body and the outfit each brought their own
+    # and both have to be told the same thing or the clothes stay behind.
+    posed = 0
+    for a in (o for o in bpy.data.objects if o.type == 'ARMATURE'):
+        if a.animation_data is None:
+            a.animation_data_create()
+        try:
+            a.animation_data.action = act
+            # Blender 5 actions are slotted, and a slot has to be chosen for
+            # this user or the assignment is accepted and does nothing.
+            if getattr(act, 'slots', None):
+                a.animation_data.action_slot = act.slots[0]
+            posed += 1
+        except Exception:
+            pass
+    if not posed:
+        return '%s: no armature took the action' % word
+
+    lo, hi = act.frame_range
+    bpy.context.scene.frame_set(int(lo + (hi - lo) * ALONG))
+    bpy.context.view_layer.update()
+
+    meshes = [o for o in bpy.data.objects
+              if o.type == 'MESH' and o.name in mine
+              and not any(b in o.name.lower() for b in NOT_A_PERSON)]
+    if not meshes:
+        return '%s: no mesh' % word
+    return export(word, meshes, tall_cm, '%s + %s' % (base, outfit))
 
 
 def main():
     print('--- posebake')
     for word, (stem, tall) in sorted(WANT.items()):
         print('   ' + str(bake(word, stem, tall)))
+    for word, (base, outfit, tall) in sorted(PEOPLE.items()):
+        print('   ' + str(person(word, base, outfit, tall)))
     print('--- done')
 
 

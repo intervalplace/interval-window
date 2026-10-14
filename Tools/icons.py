@@ -865,10 +865,27 @@ def main():
     # Its POSE and its PARTS go with it: a static mesh has no skeleton to
     # animate and nothing to hang a second mesh on, and leaving either behind
     # would have the renderer trying both on a thing that cannot take them.
+    # NOT ALL OF THEM, AND THE FIVE LEFT OUT ARE LEFT OUT FOR A REASON.
+    #
+    # The three Wild creatures wear flat colours on M_IntervalFlat and come
+    # through perfectly. The five corpses wear TEXTURED materials on
+    # M_IntervalPerson, and on a static mesh those render exactly neutral:
+    # the posed risen photographs as a bare grey body in a walking stance with
+    # its clothes invisible, and the grey guard refuses it, correctly.
+    #
+    # It is not the geometry and it is not the UVs. The clothes are in the
+    # file -- 8,964 faces of MI_Peasant on the risen -- the slots are all
+    # bound, and the OBJ carries 14,007 texture coordinates that its faces
+    # reference. The same materials on the same art render in colour when the
+    # mesh is SKELETAL. Whatever M_IntervalPerson wants that a static mesh
+    # does not give it has not been found, so the five keep the rigged path
+    # and their T-pose until it is.
+    POSED_SKIP = {'risen', 'barrow-wight', 'gibbet-dead', 'gibbet-king',
+                  'incursion'}
     if os.path.exists(S + 'posed.json'):
         for row in (json.load(open(S + 'posed.json')).get('meshes') or ()):
             word, path = row.get('name'), row.get('path')
-            if not word or not path or word not in have:
+            if not word or not path or word not in have or word in POSED_SKIP:
                 continue
             have[word] = path
             POSES.pop(word, None)

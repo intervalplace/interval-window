@@ -31,6 +31,34 @@ FROM = {
     'scree-imp': 'monster_a',
 }
 
+# ---- AND THE PEOPLE, WHOSE SLOTS ARE NAMED BY THE SOURCE AND NOT BY US ----
+#
+# The five corpses are a bare body plus an outfit, and both halves come in
+# naming their materials `MI_<something>` -- the names Quaternius shipped.
+# What Unreal is wearing is `MP_<something>`, built by the import that made the
+# people in the first place. The rename is one to one, except that the BODY of
+# a corpse wears the drained copies in Beasts/Risen rather than a living
+# citizen's skin, which is the whole point of those three.
+PEOPLE = '/Game/Interval/Universal/People/'
+# The drained copies live in Universal/Base beside the body they are a copy
+# OF, not in Beasts/Risen beside the mesh that wears them. Looked up rather
+# than assumed, after assuming it once and binding nothing.
+RISEN = '/Game/Interval/Universal/Base/'
+SLOT = {
+    'MI_Hair_1': RISEN + 'MP_Dead_Hair',
+    'MI_Hair_2': RISEN + 'MP_Dead_Hair',
+    'MI_Eyes': RISEN + 'MP_Dead_Eyes',
+    'MI_Superhero_Male': RISEN + 'MP_Dead_Male',
+    'MI_Superhero_Female': RISEN + 'MP_Dead_Female',
+    'MI_Peasant': PEOPLE + 'MP_Peasant',
+    'MI_Ranger': PEOPLE + 'MP_Ranger',
+    'MI_Knight': PEOPLE + 'MP_Knight',
+    'MI_Noble': PEOPLE + 'MP_Noble',
+    'MI_Wizard': PEOPLE + 'MP_Wizard',
+    'MI_Regular_Male': PEOPLE + 'MP_Regular_Male',
+    'MI_Regular_Female': PEOPLE + 'MP_Regular_Female',
+}
+
 tools = unreal.AssetToolsHelpers.get_asset_tools()
 lib = unreal.EditorAssetLibrary
 report = {'errors': [], 'meshes': []}
@@ -87,7 +115,23 @@ for p in sorted(lib.list_assets(DEST, recursive=True, include_folder=False)):
     stem = FROM.get(word)
     slots = [str(x.material_slot_name) for x in mesh.static_materials]
     bound, lost = 0, []
-    if stem:
+    if stem is None:
+        # a person: the slot names are the source's own, and SLOT says what
+        # each one is wearing here.
+        for i, slot in enumerate(slots):
+            # BLENDER NUMBERS A NAME IT HAS SEEN BEFORE. The body and the
+            # outfit are two files and both carry an `MI_Eyes`, so the second
+            # arrives as `MI_Eyes.001` and matches nothing.
+            want = SLOT.get(slot.split('.')[0])
+            mi = lib.load_asset('%s.%s' % (want, want.rsplit('/', 1)[-1])) if want else None
+            if mi:
+                mesh.set_material(i, mi)
+                bound += 1
+            else:
+                lost.append(slot)
+        if bound:
+            lib.save_asset(p, False)
+    else:
         for i, slot in enumerate(slots):
             # A DOT IS NOT A DOT BY THE TIME IT IS AN ASSET NAME. The ogre's
             # one slot is called `Atlas.001` and dress_wild.py's instance for
