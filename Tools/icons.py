@@ -249,6 +249,15 @@ FACING = {          # word -> camera yaw in degrees
     'goblin': 270.0,     # grinning, club in hand; at 90 it is a green back
     'troll': 270.0,      # at 90 it is a wall of shoulders and no face at all
     'scree-imp': 270.0,  # wings out and its face up, not a wing seen edge-on
+    # SHE IS A FACE, NOT A FISH. The rule picks 90 for her, because her tail
+    # runs along X and the long side is the broad one -- which is right for a
+    # boar and wrong for her: at 90 the camera stands behind her left
+    # shoulder, the soaked hair takes the whole head and the one thing the
+    # engine says about her twice, that she is the MIRROR OF YOURSELF, is the
+    # thing you cannot see. 135 is the three-quarter: her face, and the tail
+    # still sweeping away rather than foreshortened to nothing as it would be
+    # head-on at 180.
+    'siren': 135.0,
 }
 STAND = {       # word -> (roll, pitch, yaw) for the actor
     # ---- THE FOUR KIT HELMS, WHICH WERE PHOTOGRAPHED ON THEIR BACKS ----
