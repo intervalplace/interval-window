@@ -271,9 +271,13 @@ STAND = {       # word -> (roll, pitch, yaw) for the actor
     # paper colour rather than judged on black.
     'iron-helm':  (90.0, 0.0, 0.0),
     'steel-helm': (90.0, 0.0, 0.0),
-    # The quick helm keeps its own, because the visor is the whole character
-    # of it and this is the one angle that shows the face.
-    'quick-helm': (-90.0, 0.0, 90.0),
+    # THE QUICK HELM WAS THE EXCEPTION AND IS NOT ANY MORE. It kept
+    # (-90, 0, 90) because that angle shows its visor, and with the grade tint
+    # finally reaching it -- see tiers.is_metal, which did not know the kit
+    # names its slots Grey -- the sprite turned out to be a pale blue BOWL
+    # seen into from above. A visor nobody can make out is not worth showing
+    # the inside of a helmet, so it stands with the other three.
+    'quick-helm': (90.0, 0.0, 0.0),
     'gold-helm':  (90.0, 0.0, 0.0),
 }
 
