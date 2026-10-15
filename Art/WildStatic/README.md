@@ -30,8 +30,10 @@ AND NEITHER IS THE CREATURE ITS NAME SAYS. `raven.glb` holds one mesh called
 "Ernest", a blue and green bird with an orange beak; `mermaid.glb` holds one
 called "Sea monster Scene", which is a tentacle, a rock and a ship. They were
 taken as the first CC0 hit for a search word without anyone looking at the
-model. The crow is forged now (see `crow` in Tools/make_art.py) and the siren
-is still waiting on art.
+model. BOTH ARE FORGED NOW and neither file is drawn by anything: the crow is
+`crow` in Tools/make_art.py and the siren is Tools/blend/siren.py. The records
+below stay because the files are still in the repository, and a licence record
+is about what is HELD, not about what is currently drawn.
 
 `goblin_d.glb` in this folder has NO licence record and is not covered by
 either heading above. The same is true of the goblins, the ogre, the orc, the

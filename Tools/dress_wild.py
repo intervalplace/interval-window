@@ -181,9 +181,12 @@ SM = 'editor_toolset.toolsets.static_mesh.StaticMeshTools'
 # handbook while their depth passes showed a crow with a beak and a tail and a
 # figure among rocks. The camera was right, the framing was right, the mesh was
 # right, and the colour was never connected.
+# `raven` and `mermaid` ARE NOT HERE ANY MORE. Connecting their sheets is what
+# revealed what they actually are -- a blue and green parrot called Ernest,
+# and a kraken round a sailing ship called "Sea monster Scene" -- and both are
+# forged now, so nothing in the world draws either mesh. A row that dresses an
+# asset no table reaches is work done for nobody; see Tools/whodraws.py.
 SHEETED = {
-    'raven':    'base_color_texture',
-    'mermaid':  'base_color_texture',
     'goblin_d': 'base_color_texture',
 }
 for beast, sheet in SHEETED.items():
