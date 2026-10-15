@@ -2588,6 +2588,26 @@ if 'carrion-crow' in have['Mobs']:
     _c['yawJitter'] = 360.0
     _c['lean'] = {'pitch': 0.0, 'yaw': 0.0, 'roll': 0.0}
 
+# AND THE SIREN, FORGED FOR THE SAME REASON.
+#
+# She was `mermaid.glb`, which holds one mesh called `Sea monster Scene`: a
+# kraken round a sailing ship, forty-three thousand vertices, fetched by
+# filename and never opened. Authored at her own size, so the scale is one and
+# her tail is already at zero.
+#
+# SHE DOES NOT WANDER -- the engine says "a siren sits on her strand and
+# sings" -- but she may sit facing any way, so the yaw still jitters.
+if 'siren' in have['Mobs']:
+    _s = have['Mobs']['siren']
+    _s['mesh'] = {'refPath': '/Game/Interval/Forged/siren.siren'}
+    _s['skeletal'] = 'None'
+    _s['skeletalParts'] = []
+    _s['material'] = None
+    _s['scale'] = {'x': 1.0, 'y': 1.0, 'z': 1.0}
+    _s['zOffset'] = 0.0
+    _s['yawJitter'] = 360.0
+    _s['lean'] = {'pitch': 0.0, 'yaw': 0.0, 'roll': 0.0}
+
 # THE INCURSION'S FIVE FACES, which the table has no rows for at all.
 #
 # `incursion` is a TYPE and the creature is under it: the world sends `face`

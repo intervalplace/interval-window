@@ -3284,7 +3284,14 @@ WILD_STILL = {
   # is CC-BY only, "raven" returns the same Ernest, and "blackbird" returns two
   # cartoon blobs. So it is forged and wired in apply.py, perched, 48 cm beak
   # to tail. See `crow` in make_art.py.
-  'siren':          ('mermaid',  0.0068,  0.0, (0.0, 0.0, 0.0)),
+  # `siren` IS NOT HERE ANY MORE, for the same reason the crow is not.
+  # `mermaid.glb` holds exactly one mesh and it is called `Sea monster Scene`:
+  # forty-three thousand vertices of a kraken wrapped round a sailing ship.
+  # Scaled to 1.87m and stood on a beach it read as a tentacle and a boat,
+  # which is what it is. That is the THIRD asset in this file fetched by
+  # filename and never opened -- see Ernest the raven two lines up and
+  # `BearTrap_Open` below. She is forged now and wired in apply.py; see
+  # Tools/blend/siren.py for what the engine says she is.
   # THE BEAR ARRIVES LYING DOWN. Measured, not guessed: 247 cm long, 198 cm
   # through, and 51 cm from top to bottom -- which is a bear on its side, or
   # rather a bear modelled Y-up. A quarter turn of roll stands it on its feet,
