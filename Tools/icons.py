@@ -394,9 +394,26 @@ def shoot(w, mesh_path, name):
     # The three-quarter view this camera already stands at is the readable one
     # for anything that stands, which is the same reason a roughly cubic item
     # is left alone below.
-    if name in BEASTS:
-        turn = unreal.Rotator(*STAND[name]) if name in STAND \
-            else unreal.Rotator(0.0, 0.0, 0.0)
+    # ---- A STAND IS THE LAST WORD, FOR ANYTHING, NOT JUST A CREATURE ----
+    #
+    # The branch below leaves a roughly cubic item exactly as its mesh was
+    # authored, "because for those the three-quarter view is already the
+    # readable one". That holds only while everything cubic was authored the
+    # same way up, and the helms are not: four come from an OpenGameArt kit
+    # lying on their backs and two are forged by this project standing
+    # upright, so the armour page printed four helms on their backs beside
+    # two upright ones.
+    #
+    # `parts.py` knows the answer for WEARING one -- the kit helms carry
+    # roll=-90 -- but that rotation is in BONE space, where X runs along the
+    # bone, and this camera is in world space. It cannot be lifted across.
+    # So the pose is chosen the way this project chooses anything it cannot
+    # derive: by looking, with `Tools/standprobe.py`, which photographs one
+    # word at a list of rotations.
+    if name in STAND:
+        turn = unreal.Rotator(*STAND[name])
+    elif name in BEASTS:
+        turn = unreal.Rotator(0.0, 0.0, 0.0)
     elif flat > 0.40:
         turn = unreal.Rotator(0.0, 0.0, 0.0)
     else:
