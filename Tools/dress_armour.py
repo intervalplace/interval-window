@@ -124,11 +124,23 @@ for name, (r, g, b, rough, grain) in PLATE.items():
              {'instance': {'refPath': path}, 'name': param, 'value': v})
     call(AS, 'save_assets', {'asset_paths': [path.split('.')[0]]})
 
+# ---- AND A HELM IS THE GRADE ITS WORD ANNOUNCES ----
+#
+# `Knight_Helmet2` IS the gold helm -- parts.HELMS binds that mesh to that
+# word and no other -- and it was painted MP_Iron, so the dearest helm a
+# citizen can wear rendered as the cheapest one. The plates already had this
+# argued out and fixed: the note over PLATE_METAL says that passing None made
+# every plate take the mesh's own material, "so a citizen in quickmetal looked
+# like a citizen in iron", and that the plate is the piece that decides what a
+# figure reads as down the road. A helm is the second such piece and had the
+# same fault, in a different shape: not a missing material but the wrong one.
+#
+# One mesh per word, so each can simply take its own grade.
 KNIGHT = {
     'Cuirass':             'MP_Steel',
-    'Knight_Helmet1':      'MP_Steel',
-    'Knight_Helmet2':      'MP_Iron',
-    'Knight_Helmet3':      'MP_Steel',
+    'Knight_Helmet1':      'MP_PlateSteel',
+    'Knight_Helmet2':      'MP_PlateGold',
+    'Knight_Helmet3':      'MP_PlateStar',
     'Knight_ShoulderPads': 'MP_Iron',
 }
 # EXCEPT WHERE A MESH NAMES A SLOT AFTER SOMETHING IT IS NOT MADE OF.
@@ -138,7 +150,10 @@ KNIGHT = {
 # metal as the rest of the helm. It takes quickmetal, the same violet the quick
 # plate and the quick weapons take, so a citizen in the quick set is in one
 # metal from head to hand.
-SLOT = {('Knight_Helmet3', 'Golden'): 'MP_PlateStar'}
+# The band on the quick helm needed naming while the helm around it was steel.
+# Now the whole helm is quickmetal and the band is the same metal as the rest
+# of it, which is what one piece forged from one alloy looks like.
+SLOT = {}
 for mesh, mat in KNIGHT.items():
     m = '%s%s.%s' % (KIT, mesh, mesh)
     raw = call(SM, 'get_material_slots', {'mesh': {'refPath': m}})

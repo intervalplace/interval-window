@@ -44,8 +44,22 @@ TIERS = {
 # `Armor`, `Blade`. Anything whose name contains one of these is the part that
 # changes with the grade; `LightWood`, `DarkWood`, `Leather` and `Fletch` are
 # not, and are left alone.
+#
+# AND SOME KITS NAME THE SLOT AFTER ITS COLOUR, NOT ITS METAL. The armour kit
+# calls the steel helm's two parts `Grey` and `DarkGrey`, the gold helm's one
+# part `Grey`, and the quick helm's three `Grey`, `Golden` and `Black`. None of
+# those words is a metal, so three of the four kit helms were never tinted by
+# grade at all: they rendered in the colours the pack shipped, which is the
+# exact symptom this table exists to cure -- see the note in icons.py about
+# every grade coming out looking almost identical.
+#
+# `grey` is a broad word to add, so the blast radius was measured before it
+# went in rather than argued about: across all 132 item meshes in the world,
+# `Grey` and `DarkGrey` appear on three meshes and all three are helms, where
+# they are the metal. `is_metal` has exactly one caller, the tint in icons.py.
 METAL = ('steel', 'iron', 'gold', 'silver', 'metal', 'armor', 'armour',
-         'blade', 'edge', 'helmet', 'helm', 'shield', 'plate', 'mail')
+         'blade', 'edge', 'helmet', 'helm', 'shield', 'plate', 'mail',
+         'grey', 'gray')
 NOT_METAL = ('wood', 'leather', 'fletch', 'cloth', 'rope', 'bone', 'horn')
 
 
