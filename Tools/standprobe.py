@@ -60,8 +60,13 @@ _target = None
 def target():
     global _target
     if _target is None:
+        # THROUGH THE LIBRARY, WITH A WORLD, exactly as icons.py does. A bare
+        # TextureRenderTarget2D is never initialised and has no resource
+        # behind it, and the world context is the first argument: leaving it
+        # out gives "Cannot nativize 'int' as 'WorldContextObject'".
         _target = unreal.RenderingLibrary.create_render_target2d(
-            SIDE, SIDE, unreal.TextureRenderTargetFormat.RTF_RGBA8)
+            world(), SIDE, SIDE, unreal.TextureRenderTargetFormat.RTF_RGBA8,
+            unreal.LinearColor(0, 0, 0, 1), False)
     return _target
 
 

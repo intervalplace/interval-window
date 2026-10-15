@@ -250,7 +250,32 @@ FACING = {          # word -> camera yaw in degrees
     'troll': 270.0,      # at 90 it is a wall of shoulders and no face at all
     'scree-imp': 270.0,  # wings out and its face up, not a wing seen edge-on
 }
-STAND = {}      # word -> (roll, pitch, yaw) for the actor
+STAND = {       # word -> (roll, pitch, yaw) for the actor
+    # ---- THE FOUR KIT HELMS, WHICH WERE PHOTOGRAPHED ON THEIR BACKS ----
+    #
+    # Chosen by looking, with Tools/standprobe.py, which photographs one word
+    # at a list of rotations. The armour page printed six helms at six angles:
+    # `great-helm` and `shell-helm` are forged by this project and already
+    # stand up, and these four come from an OpenGameArt kit lying on their
+    # backs, which is why `parts.py` gives them roll=-90 to hang one on a
+    # head. That rotation is in BONE space and cannot be lifted into this
+    # camera's world space, so it was re-chosen here from the probe sheet.
+    #
+    # `iron-helm` is the odd one: it is `Helmet1`, a different author from the
+    # three `Knight_Helmet` meshes, and at roll -90 it shows the inside of the
+    # bowl. It wants the other way round.
+    # AND THE YAW DECIDES WHETHER YOU SEE THE HELM OR THE INSIDE OF IT. The
+    # first pick put steel and gold at yaw 180, which turns the open bottom
+    # toward the camera: both printed as a bowl with the lining showing. Read
+    # off the probe sheet a second time, with the renders composited on the
+    # paper colour rather than judged on black.
+    'iron-helm':  (90.0, 0.0, 0.0),
+    'steel-helm': (90.0, 0.0, 0.0),
+    # The quick helm keeps its own, because the visor is the whole character
+    # of it and this is the one angle that shows the face.
+    'quick-helm': (-90.0, 0.0, 90.0),
+    'gold-helm':  (90.0, 0.0, 0.0),
+}
 
 # ---- AND WHICH OF ITS TWO FACES, WHERE COLOUR CANNOT TELL ----
 #
