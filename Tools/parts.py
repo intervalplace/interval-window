@@ -363,7 +363,21 @@ LANDMARKS = {
   'rag-tree':    T(1.40, 1.10, 110, 0.24, 65, SPH, jit=0.18),
   'reeds':       K(CONE, M('MI_ScatterReed'), 1.40, 1.30, 1.30, 65, 360, 0.24),
   # --- what stands up on its own ---
-  'standing-stone': K(CUBE, ROCK, 0.55, 0.38, 2.20, 108, 360, 0.20),
+  # ---- THE THREE STONES ARE AUTHORED NOW, AND WERE BOXES ----
+  #
+  # `audit.py` names the rows still drawn with an engine primitive and
+  # `whodraws.py --dead` says which of those reach the screen. These three did
+  # with NO parts under them: a Cube 55x38x220 in rock standing by itself in a
+  # meadow, a Cube 72x50x310, and a Cube 42x36x95 at a crossing. The other
+  # seven the audit names are composed out of sticks, and a ladder really is
+  # made of sticks, so they are left alone.
+  #
+  # See Tools/blend/stones.py. Scale 1 because they are forged at real size,
+  # and the zOffsets are the ones these rows already had: a centred cube at
+  # 108 with a half-height of 110 sat two centimetres into the ground, so the
+  # authored mesh, whose base is its origin, is given the same two.
+  'standing-stone': K(FORGED_PATH('standing_stone'), None,
+                      1.0, 1.0, 1.0, -2, 360, 0.20),
   # A MARKER, NOT A MONUMENT. Four of these stand at the corners of every
   # bridge so a crossing can be seen from across a field, and until now they
   # wore the standing stone's word and the standing stone's art: four
@@ -374,8 +388,10 @@ LANDMARKS = {
   # set, where the Brandline's stones are stones somebody RAISED. The
   # difference should be visible at a glance, because the Brandline means
   # something and a bridge means "bridge".
-  'bridge-stone':   K(CUBE, STONE, 0.42, 0.36, 0.95, 46, 22, 0.10),
-  'sentinel':       K(CUBE, ROCK, 0.72, 0.50, 3.10, 152, 360, 0.14),
+  'bridge-stone':   K(FORGED_PATH('bridge_stone'), None,
+                      1.0, 1.0, 1.0, -2, 22, 0.10),
+  'sentinel':       K(FORGED_PATH('sentinel'), None,
+                      1.0, 1.0, 1.0, -3, 360, 0.14),
   'fallen-stone':   K(CUBE, ROCK, 2.00, 0.70, 0.42, 20, 360, 0.18),
   'glass-stone':    K(SPH, ROCK, 0.80, 0.80, 1.10, 54, 360, 0.16),
   'milestone':      K(CUBE, STONE, 0.34, 0.24, 0.92, 46, 360, 0.10),
@@ -1879,6 +1895,25 @@ HONEST = {
   'landmark.ash-heap':       'a heap is a cone',
   'landmark.charcoal-clamp': 'a covered mound is a cone, which is why it is one',
   'landmark.peat-cut':       'a cut in the ground is a box taken out of it',
+  # ---- AND THE THINGS THAT ARE HONESTLY MADE OF STICKS ----
+  #
+  # `audit.py` named ten rows still drawn with an engine primitive. Three were
+  # a bare box with nothing under them -- the standing stone, the sentinel and
+  # the bridge stone -- and those are authored now; see Tools/blend/stones.py.
+  #
+  # These six are the rest, and they are not the same fault. A primitive is
+  # only a stand-in when the real thing has a shape the primitive does not: a
+  # menhir is not a box. A ladder IS two stiles and four rungs of square-sawn
+  # timber, and modelling that as anything other than six cuboids would be
+  # adding detail nobody put there. Counted, checked against what the piece is
+  # actually made of, and left alone on purpose.
+  'landmark.ladder':         'two stiles and four rungs, which is what a ladder is made of',
+  'landmark.scaffold':       'two poles and two boards lashed to them',
+  'landmark.stump':          'a cut trunk is a cylinder, the root flare a wider one under it',
+  'landmark.log-pile':       'logs are cylinders and a pile of them is cylinders',
+  'landmark.chopping-block': 'a round off a trunk, with the axe standing in the cut',
+  'landmark.barricade':      'planks across a gap and a rail along them',
+  'landmark.withy-stack':    'a cone of rods leaned round a pole, which is how one is built',
   # ---- NOTHING WORN IS LISTED HERE ANY MORE ----
   #
   # The chains, the rods and the horn were exempted on the grounds that a
