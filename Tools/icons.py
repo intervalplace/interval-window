@@ -48,6 +48,10 @@ S = ('/private/tmp/claude-501/-Users-matsjulner-Documents-Unreal-Projects-interv
      'd4aebce9-c39a-4f8e-86ec-ab2848a159a1/scratchpad/')
 OUT = os.path.abspath(os.path.join(unreal.Paths.project_dir(), 'Art', 'Icons', 'raw'))
 SIDE = 512          # rendered big and reduced later: the reduction IS the anti-aliasing
+# How many drawn samples a neutrality verdict needs before anybody acts on it.
+# See `spread`: below this the measure is the item's antialiased edge and says
+# nothing about its colour.
+ENOUGH = 40
 
 # WHERE A LONG THING POINTS, in degrees off screen-vertical. Everything in the
 # pack that has a long axis lands on this one diagonal, so a page of them reads
@@ -90,18 +94,54 @@ def spread(w, target):
     Sampled on a grid rather than read whole. The question is only whether to
     take the picture again, and a thousand pixels answer it as well as a
     quarter of a million would.
+
+    ---- AND A VERDICT FROM SIX PIXELS IS NOT A VERDICT ----
+
+    A thousand samples answer it for something that fills its frame. The five
+    corpses do not. `fills` below records why: these meshes report an ANIMATED
+    bounding box, `Risen_Male` framed a camera for a box many times the figure
+    and drew it at 94 lit pixels out of 16,384 -- and `barrow-wight`, `risen`
+    and `incursion` all share that mesh. A thin pale figure in a tenth of its
+    frame lands on a handful of grid points, mostly its own antialiased edge,
+    and the mean of those is near zero whatever the shader did.
+
+    So the five went round the retry loop eight times on every render, took
+    twenty minutes doing it, and came back identical every time -- because
+    nothing was wrong. Their composed sprites measure a colour spread of 15 to
+    25 against the sheep's exact 0, and `person_mat.hlsl` goes out of its way
+    not to make a corpse neutral: Pallor lerps toward `Grey * (0.94, 0.95,
+    0.88)`, and the note there says a flat grey figure would read as
+    untextured rather than as dead.
+
+    The answer is not to add them to the honest list, which would blind the
+    guard to a real failure on five of the hardest meshes in the pack. It is
+    to sample again, finely, when the coarse grid found too little to judge
+    by, and to answer NO VERDICT rather than a number when even that does not
+    reach enough of the thing. A measurement nobody can stand behind must not
+    be allowed to order a re-render.
     """
     ground = unreal.RenderingLibrary.read_render_target_pixel(w, target, 0, 0)
-    seen = total = 0
-    step = max(1, SIDE // 32)
-    for y in range(0, SIDE, step):
-        for x in range(0, SIDE, step):
-            p = unreal.RenderingLibrary.read_render_target_pixel(w, target, x, y)
-            if p.r == ground.r and p.g == ground.g and p.b == ground.b:
-                continue                      # the empty frame round the item
-            total += max(p.r, p.g, p.b) - min(p.r, p.g, p.b)
-            seen += 1
-    return (total / seen) if seen else None
+
+    def over(step):
+        seen = total = 0
+        for y in range(0, SIDE, step):
+            for x in range(0, SIDE, step):
+                p = unreal.RenderingLibrary.read_render_target_pixel(w, target, x, y)
+                if p.r == ground.r and p.g == ground.g and p.b == ground.b:
+                    continue                  # the empty frame round the item
+                total += max(p.r, p.g, p.b) - min(p.r, p.g, p.b)
+                seen += 1
+        return total, seen
+
+    total, seen = over(max(1, SIDE // 32))
+    if seen < ENOUGH:
+        # four times finer in each direction, which is sixteen times the
+        # samples and still only a quarter of the target. Paid for by the few
+        # items that need it, not by the pack.
+        total, seen = over(max(1, SIDE // 128))
+    if seen < ENOUGH:
+        return None                           # no verdict: too little drawn
+    return total / seen
 
 
 def fills(w, target):
