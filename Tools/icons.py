@@ -271,13 +271,27 @@ STAND = {       # word -> (roll, pitch, yaw) for the actor
     # paper colour rather than judged on black.
     'iron-helm':  (90.0, 0.0, 0.0),
     'steel-helm': (90.0, 0.0, 0.0),
-    # THE QUICK HELM WAS THE EXCEPTION AND IS NOT ANY MORE. It kept
-    # (-90, 0, 90) because that angle shows its visor, and with the grade tint
-    # finally reaching it -- see tiers.is_metal, which did not know the kit
-    # names its slots Grey -- the sprite turned out to be a pale blue BOWL
-    # seen into from above. A visor nobody can make out is not worth showing
-    # the inside of a helmet, so it stands with the other three.
-    'quick-helm': (90.0, 0.0, 0.0),
+    # ---- AND THE QUICK HELM FACES THE READER ----
+    #
+    # It is the only one of the four with a FACE: a nasal bar and two cheek
+    # pieces, which say "helmet" at seven millimetres in a way a dome never
+    # will. The other three have nothing on them worth turning toward anybody.
+    #
+    # This was moved to (90, 0, 0) to stand with the rest and that was a
+    # mistake made off a bad photograph: the probe sheet is rendered unlit and
+    # very dark, I brightened it by multiplying, and multiplying a dark image
+    # blows the interior to the same white as the shell -- so an open crown
+    # and a closed one looked alike and the featureless side won. Gamma rather
+    # than gain, and the answer is obvious: the two roll -90 views show the
+    # face and the two others are blank blobs.
+    #
+    # AND NO ROTATION HIDES ITS CROWN, which is worth writing down so nobody
+    # tries again. `Knight_Helmet3` is modelled OPEN at the top, and this
+    # camera looks down thirty degrees, so the inside is visible from every
+    # upright angle. The probe sheet appears to show a closed helm only
+    # because it renders unlit and the interior reads as shadow. The choice
+    # here is which face to show, not whether to show the opening.
+    'quick-helm': (-90.0, 0.0, 0.0),
     'gold-helm':  (90.0, 0.0, 0.0),
 }
 
