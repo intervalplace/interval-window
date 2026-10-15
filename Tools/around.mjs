@@ -17,7 +17,8 @@ ws.on('message', (d) => {
   const away = (o) => Math.max(Math.abs(o.x - me.x), Math.abs(o.y - me.y))
   const pack = (me.inventory || []).map((s, i) => s ? `${i}:${s.item}×${s.qty}` : null).filter(Boolean)
   const worn = Object.entries(me.equipment || {}).filter(([, v]) => v).map(([k, v]) => `${k}:${v.item ?? v}`)
-  console.log(`ME ${me.x},${me.y}  hp ${me.hp}  gold ${me.gold}  book ${me.book ?? 'common'}  ${me.action ? (me.action.type + (me.action.remaining !== undefined ? '+' + me.action.remaining : '')) : 'idle'}`)
+  const hp = (o) => o.health ?? o.hp
+  console.log(`ME ${me.x},${me.y}  hp ${hp(me) ?? '?'}  gold ${me.gold}  book ${me.book ?? 'common'}  ${me.action ? (me.action.type + (me.action.remaining !== undefined ? '+' + me.action.remaining : '')) : 'idle'}`)
   console.log(`   pack: ${pack.join(' ') || 'empty'}`)
   console.log(`   worn: ${worn.join(' ') || 'nothing'}`)
   const rows = []
@@ -26,9 +27,22 @@ ws.on('message', (d) => {
   // -- and listing it with nothing else said sent seven arrows into a body
   // that was already dead, every one of them refused. The hp is the only way
   // to tell, so the hp is shown.
+  // ---- AND THE FIELD IS `health`, NOT `hp` ----
+  //
+  // The rename happened in the engine and this never followed it. engine.js
+  // keeps one line for the crossing, `health: p.health ?? p.hp`, and says in
+  // the comment above it that it is "the one place old rules are read by
+  // new" -- so `hp` exists nowhere on a current record and every reader of it
+  // gets undefined.
+  //
+  // The citizen's line printed "hp undefined" where its health goes, which is
+  // ugly and obvious. The creatures were worse and silent: `state` returned
+  // the empty string for every one of them, so nothing was ever marked DEAD
+  // and the function stopped doing the single job the note above it describes.
   const state = (o) => {
-    if (o.hp === undefined) return ''
-    return o.hp <= 0 ? '  DEAD' : `  hp ${o.hp}`
+    const h = hp(o)
+    if (h === undefined) return ''
+    return h <= 0 ? '  DEAD' : `  hp ${h}`
   }
   const add = (what, id, o, name) => { if (away(o) <= R) rows.push([away(o), what, name, id, `${o.x},${o.y}`, state(o)]) }
   for (const [id, n] of Object.entries(f.nodes || {})) add('node', id, n, n.kind ? `${n.type}.${n.kind}` : n.type)
