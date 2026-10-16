@@ -31,7 +31,14 @@ mkdir -p "$OUT/portable" "$OUT/node_modules"
 # it -- the shim answers an absent module with a proxy whose every function
 # throws if anybody tries. So it is left out, and if that ever stops being
 # true the failure is loud rather than silent.
+# `protocol.mjs` JOINED THIS LIST THE WAY THE CHECK BELOW SAID IT WOULD. The
+# bridge grew an import of it and the hand-written list did not follow, so the
+# staged client was one file short and would not have started. The check
+# caught it at the last step of a packaging run rather than on somebody's
+# machine, which is the whole reason it is there. It brings nothing with it:
+# protocol.mjs imports only engine.js, which is already here.
 cp "$B"/engine.js "$B"/sky.mjs "$B"/terrain-mirror.mjs "$B"/unreal-bridge.mjs \
+   "$B"/protocol.mjs \
    "$B"/host-node.mjs "$B"/view.mjs "$B"/worldgen*.mjs "$OUT/"
 cp "$B"/portable/shim.js "$B"/portable/esm.js "$B"/portable/start.js \
    "$B"/portable/host-unreal.js "$OUT/portable/"
