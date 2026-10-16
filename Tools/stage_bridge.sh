@@ -31,15 +31,18 @@ mkdir -p "$OUT/portable" "$OUT/node_modules"
 # it -- the shim answers an absent module with a proxy whose every function
 # throws if anybody tries. So it is left out, and if that ever stops being
 # true the failure is loud rather than silent.
-# `protocol.mjs` JOINED THIS LIST THE WAY THE CHECK BELOW SAID IT WOULD. The
-# bridge grew an import of it and the hand-written list did not follow, so the
-# staged client was one file short and would not have started. The check
-# caught it at the last step of a packaging run rather than on somebody's
-# machine, which is the whole reason it is there. It brings nothing with it:
-# protocol.mjs imports only engine.js, which is already here.
-cp "$B"/engine.js "$B"/sky.mjs "$B"/terrain-mirror.mjs "$B"/unreal-bridge.mjs \
-   "$B"/protocol.mjs \
-   "$B"/host-node.mjs "$B"/view.mjs "$B"/worldgen*.mjs "$OUT/"
+# THE LIST IS Tools/bridge-core.txt, read by this script and by the other one
+# that stages the bridge. It used to be written out here by hand AND there,
+# with the same warning comment over both, and when `unreal-bridge.mjs` grew
+# an import of `protocol.mjs` only one of them was mended -- so the next
+# packaging run failed in exactly the same way as the one before it.
+while read -r f; do
+  case "$f" in ''|\#*) continue;; esac
+  # ${~f} because a glob inside a VARIABLE is not expanded in zsh unless it is
+  # asked for, and `worldgen*.mjs` is a line in that file. Without the tilde
+  # cp is handed the asterisk literally and says no such file.
+  for g in $B/${~f}; do cp "$g" "$OUT/"; done
+done < "$SP/bridge-core.txt"
 cp "$B"/portable/shim.js "$B"/portable/esm.js "$B"/portable/start.js \
    "$B"/portable/host-unreal.js "$OUT/portable/"
 # ONLY ed25519, AND THAT IS THE WHOLE CRYPTO DEPENDENCY.

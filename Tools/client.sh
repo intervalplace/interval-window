@@ -166,13 +166,18 @@ cp -R "$P/Saved/StagedBuilds/Mac/interval.app" "$OUT/Mac/"
 echo "--- the bridge"
 B="$(dirname "$P")/interval-bridge"
 mkdir -p "$OUT/bridge/node_modules"
-# NAMED ONE BY ONE, AND THAT IS A TRAP EVERY TIME A FILE IS ADDED. The bridge
-# grew `host-node.mjs` -- the six things it needs from the machine underneath,
-# split out so the same file can run inside an iOS app -- and a client cut
-# without it starts, prints nothing, and dies on a missing import before it
-# has a window to say so in. Anything `unreal-bridge.mjs` imports belongs here.
-cp "$B"/engine.js "$B"/sky.mjs "$B"/terrain-mirror.mjs "$B"/unreal-bridge.mjs \
-   "$B"/host-node.mjs "$B"/view.mjs "$B"/worldgen*.mjs "$OUT/bridge/"
+# THE LIST IS Tools/bridge-core.txt, read by this script and by the other one
+# that stages the bridge. It used to be written out here by hand AND there,
+# with the same warning comment over both, and when `unreal-bridge.mjs` grew
+# an import of `protocol.mjs` only one of them was mended -- so the next
+# packaging run failed in exactly the same way as the one before it.
+while read -r f; do
+  case "$f" in ''|\#*) continue;; esac
+  # ${~f} because a glob inside a VARIABLE is not expanded in zsh unless it is
+  # asked for, and `worldgen*.mjs` is a line in that file. Without the tilde
+  # cp is handed the asterisk literally and says no such file.
+  for g in $B/${~f}; do cp "$g" "$OUT/bridge/"; done
+done < "$SP/bridge-core.txt"
 for M in ws @noble; do
   rm -rf "$OUT/bridge/node_modules/$M"
   cp -R "$B/node_modules/$M" "$OUT/bridge/node_modules/" 2>/dev/null || true

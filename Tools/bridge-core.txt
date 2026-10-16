@@ -1,0 +1,30 @@
+# THE FILES THE BRIDGE IS, IN ONE PLACE.
+#
+# Two scripts stage the bridge and they stage it differently: `client.sh` puts
+# it beside the desktop app with `ws` and the whole of `@noble`, and
+# `stage_bridge.sh` puts it inside the bundle with the portable shims and only
+# ed25519, because a phone has no repository next door. Those differences are
+# real and each is argued where it happens.
+#
+# WHAT IS NOT DIFFERENT IS WHICH FILES THE BRIDGE CONSISTS OF, and that list
+# was written out by hand in BOTH of them. Both carried the same comment
+# warning that it is a trap every time a file is added, and both were right:
+# `unreal-bridge.mjs` grew an import of `protocol.mjs`, one list was mended
+# and the other was not, and the next packaging run failed in exactly the same
+# way as the one before it. Two places that must agree and only one of them
+# told is the most reliable fault in this project's history.
+#
+# So the list lives here and both read it. The check each script runs after
+# copying stays where it is: this file says what to copy, and the check says
+# whether what was copied can actually start.
+#
+# One name per line. A line may be a glob, which is expanded against the
+# bridge directory. Blank lines and # comments are ignored.
+engine.js
+protocol.mjs
+sky.mjs
+terrain-mirror.mjs
+unreal-bridge.mjs
+host-node.mjs
+view.mjs
+worldgen*.mjs
