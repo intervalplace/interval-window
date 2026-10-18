@@ -893,4 +893,33 @@ private:
 
 	/** So `enter` is a knock at a door, not a battering ram. */
 	int64 LastEnterTick = -1;
+
+	/**
+	 * HOW LONG A FRAME TAKES, SAID BY THE WINDOW ITSELF.
+	 *
+	 * `stat unit` is compiled out of a Shipping build and the client people
+	 * download IS Shipping, so the one window whose speed actually matters was
+	 * the one window that could not be measured. Everything in this project's
+	 * performance notes was measured in the editor instead -- which costs
+	 * twenty-eight milliseconds a frame with no world in it at all, answers
+	 * `r.ScreenPercentage` by not changing, and had a Python callback throwing
+	 * an exception every frame while the numbers were taken. None of that is
+	 * the game.
+	 *
+	 * So the window says it. Every frame is counted; once a second the median
+	 * and the worst of the last second go in the log, which a Shipping build
+	 * still writes. It is a sort of a hundred-odd floats a second and it is
+	 * off unless asked for, because instrumentation that costs frames is
+	 * measuring itself.
+	 *
+	 *   interval.command --frames        (see the launcher)
+	 *
+	 * Reading it is a grep of the file the window writes itself, because a
+	 * Shipping build has no log at all. See IntervalSay in IntervalHand.cpp.
+	 *
+	 *   grep FRAMES ~/Library/Application\ Support/interval/window.log
+	 */
+	bool bSayFrames = false;
+	TArray<float> FrameGaps;
+	double FramesSaidAt = 0.0;
 };

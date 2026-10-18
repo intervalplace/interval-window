@@ -12,6 +12,26 @@
 set -e
 SP="$(cd "$(dirname "$0")" && pwd)"
 P="$(dirname "$SP")"
+# ---- SHIPPING, BECAUSE DEVELOPMENT POISONS EVERY FREE ----
+#
+# This built Development and the client took SEVENTY-ONE SECONDS to get into
+# the world: double-click to "you are in the world", measured. The bridge was
+# not the cause -- run on its own it is ready in 6.4 -- it was being starved
+# by the window beside it.
+#
+# `sample` on the window says why. The hot stacks are FMallocPoisonProxy::Free
+# and _platform_memset, and `nm` finds twenty-five FMallocPoisonProxy symbols
+# in the binary: a Development build of a non-editor target gets UE's memory
+# POISONING allocator, which memsets every block it frees so a use-after-free
+# shows up as a pattern. That is a fine thing to pay for while hunting a bug
+# and a ruinous thing to hand somebody who wants to play: the window sat at
+# 150% CPU and 7.2 GB before it had drawn anything.
+#
+# So the thing a person downloads is Shipping. Development is still one word
+# away for when the poisoning is what you actually want:
+#
+#   CONF=Development client.sh
+CONF="${CONF:-Shipping}"
 UAT="/Users/Shared/Epic Games/UE_5.8/Engine/Build/BatchFiles/RunUAT.sh"
 BUILD="/Users/Shared/Epic Games/UE_5.8/Engine/Build/BatchFiles/Mac/Build.sh"
 XC=/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild
@@ -98,20 +118,41 @@ if [ "$1" != "cook" ]; then
   WS="$P/Intermediate/ProjectFiles/interval_Mac_interval.xcworkspace"
   if [ ! -d "$WS" ]; then
     echo "--- the Mac workspace is gone (another platform built last); rewriting it"
-    "$BUILD" interval Mac Development \
+    "$BUILD" interval Mac "$CONF" \
       -project="$P/interval.uproject" -waitmutex > /tmp/interval-projectfiles.log 2>&1 || true
     [ -d "$WS" ] || { echo "UBT did not write $WS; see /tmp/interval-projectfiles.log"; exit 1; }
   fi
 
   echo "--- the binary"
-  UE_BUILD_FROM_XCODE=1 "$BUILD" interval Mac Development \
-    -project="$P/interval.uproject" -waitmutex 2>&1 | tail -2
+  # ---- AND STOP IF THE BINARY DOES NOT BUILD ----
+  #
+  # This was `... 2>&1 | tail -2` with nothing looking at the status, which is
+  # the same hole the cook step further down already has a long note about,
+  # left open one step earlier. `set -e` cannot help: in a pipeline the status
+  # is tail's, and tail always succeeds.
+  #
+  # WHAT IT COST. A target property was added that UBT refuses outright --
+  # "interval modifies the values of properties: [ bUseLoggingInShipping ]" --
+  # and the one line that said so went past in the part of the output `tail -2`
+  # threw away. The build reported success, xcodebuild wrapped the PREVIOUS
+  # executable, and the installed client died before `main` on a missing
+  # dylib. The afternoon after that went on chasing the staging, which was
+  # fine. A build that cannot build must say so and stop.
+  BLOG=/tmp/interval-binary.log
+  if ! UE_BUILD_FROM_XCODE=1 "$BUILD" interval Mac "$CONF" \
+       -project="$P/interval.uproject" -waitmutex > "$BLOG" 2>&1; then
+    echo "the binary did not build; nothing else was done."
+    grep -E "error:|BuildException|Result: Failed" "$BLOG" | head -5
+    echo "full log: $BLOG"
+    exit 1
+  fi
+  tail -2 "$BLOG"
 
   # 2. AND THE .app, BY HAND.
   echo "--- the app bundle"
   UBT_NO_POST_DEPLOY=true "$XC" build \
     -workspace "$P/Intermediate/ProjectFiles/interval_Mac_interval.xcworkspace" \
-    -scheme interval -configuration Development \
+    -scheme interval -configuration "$CONF" \
     -destination generic/platform=macOS \
     CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION=YES -allowProvisioningUpdates \
     UE_XCODE_BUILD_MODE=PostBuildSync > /tmp/interval-xcode.log 2>&1 \
@@ -135,7 +176,7 @@ freeport
 # that the changes were not in it. A stale artifact that looks fresh is worse
 # than no artifact.
 if ! "$UAT" BuildCookRun -project="$P/interval.uproject" -noP4 -platform=Mac \
-     -clientconfig=Development -skipbuild -cook -stage -pak -utf8output \
+     -clientconfig="$CONF" -skipbuild -cook -stage -pak -utf8output \
      > /tmp/interval-cook.log 2>&1; then
   tail -4 /tmp/interval-cook.log
   echo "the cook failed; nothing was installed. full log: /tmp/interval-cook.log"
@@ -149,9 +190,61 @@ tail -2 /tmp/interval-cook.log
 # third-party libraries and no cooked content, so it dies at launch on a
 # missing dylib. The one under Saved/StagedBuilds is whole.
 echo "--- installing"
+# AND THE STAGED NAME CARRIES THE CONFIG, except for Development.
+#
+# UAT writes `interval.app` for Development and `interval-Mac-Shipping.app`
+# for everything else, so this step -- which had `interval.app` written into
+# it -- failed the first Shipping build with "No such file or directory"
+# AFTER a clean cook. Asked rather than assumed, and the launcher still gets
+# a file called interval.app whatever it was built as, because that name is
+# the one thing a person double-clicks.
 mkdir -p "$OUT/Mac"
+STAGED="$P/Saved/StagedBuilds/Mac/interval.app"
+[ -d "$STAGED" ] || STAGED="$P/Saved/StagedBuilds/Mac/interval-Mac-$CONF.app"
+[ -d "$STAGED" ] || { echo "no staged .app under Saved/StagedBuilds/Mac for $CONF"; ls "$P/Saved/StagedBuilds/Mac" 2>/dev/null; exit 1; }
 rm -rf "$OUT/Mac/interval.app"
-cp -R "$P/Saved/StagedBuilds/Mac/interval.app" "$OUT/Mac/"
+cp -R "$STAGED" "$OUT/Mac/interval.app"
+
+# 4a. THE LIBRARIES THE STAGE DOES NOT COPY, WITHOUT WHICH IT WILL NOT START.
+#
+# The staged window died at launch with dyld saying "Library not loaded:
+# @rpath/libtbb.12.dylib". Not a crash in any of this project's code: the
+# process never reached main. `otool -L` on the staged executable lists six
+# dylibs it is linked against and the stage copies NONE of them -- the
+# manifest under Saved/StagedBuilds does not mention one.
+#
+# Two of the six are hard requirements and the window cannot start without
+# them. The others are weak links: it starts, and loses its sound.
+#
+# WHY THIS HID. Every rpath in the binary has a second entry pointing back at
+# the engine it was built with, nine directories up from wherever the app
+# sits. On this machine, with the app where this script puts it, that fallback
+# sometimes resolves, so the same bundle starts here and dies on a machine
+# with no Unreal on it. Which is every machine a player has. The only honest
+# test of a client is to launch it from a path with no engine above it.
+echo "--- the libraries the stage left out"
+APPM="$OUT/Mac/interval.app/Contents/MacOS"
+APPUE="$OUT/Mac/interval.app/Contents/UE/Engine/Binaries/ThirdParty"
+ENG="/Users/Shared/Epic Games/UE_5.8/Engine"
+# Alongside the executable, which is the first rpath entry.
+for L in libtbb.12.dylib libtbbmalloc.2.dylib; do
+  cp "$P/Binaries/Mac/$L" "$APPM/" 2>/dev/null \
+    || echo "  could not find $L beside the built binary"
+done
+# And the ones whose rpath names a folder under Contents/UE.
+copy_lib() {   # $1 the rpath folder under ThirdParty, $2 the file
+  mkdir -p "$APPUE/$1"
+  cp "$ENG/Binaries/ThirdParty/$1/$2" "$APPUE/$1/" 2>/dev/null \
+    || echo "  could not find $2"
+}
+copy_lib Apple/MetalShaderConverter/Mac libmetalirconverter.dylib
+copy_lib Ogg/Mac libogg.dylib
+copy_lib Vorbis/Mac libvorbis.dylib
+# AND SAY SO IF IT STILL CANNOT LOAD. `otool -L` on the staged binary lists
+# what it wants; anything left unresolved is a client that will not start.
+for L in libtbb.12.dylib libtbbmalloc.2.dylib; do
+  [ -f "$APPM/$L" ] || { echo "the client is missing $L and will not launch"; exit 1; }
+done
 
 # 4b. AND THE BRIDGE, WHICH IS HALF THE CLIENT.
 #
@@ -206,6 +299,54 @@ if missing:
 print('bridge: %d files, every local import resolves' % len(have))
 PYEOF
 du -sh "$OUT/Mac/interval.app"
+
+# 4d. AND IT HAS TO START, WHICH IS NOT A GIVEN AND WAS NOT CHECKED.
+#
+# A build of this client was installed, zipped and reported as done while it
+# could not reach `main`: dyld killed it on a missing `libtbb.12.dylib`, and
+# the next three attempts died in turn on the Nanite tessellation table and a
+# Slate style set. Every one of those failures happened before the window
+# existed, so there was nothing on screen and nothing in the log, and the only
+# evidence was a crash report in ~/Library/Logs/DiagnosticReports.
+#
+# A script that says "done. play it with ..." about a client that cannot start
+# is worse than one that says nothing. So it starts it.
+#
+# This is possible at all because the window keeps its log in Shipping now;
+# see Source/interval.Target.cs. Without that there is nothing to wait for and
+# no way to tell a slow start from a dead one.
+#
+# NO BRIDGE IS NEEDED. The window puts up its own "no bridge" card and goes on
+# running, so this tests the window and nothing else.
+echo "--- does it start"
+# WHAT IT WAITS FOR is the line AIntervalHand::BeginPlay writes into the
+# window's own file. Not a UE log: there isn't one in Shipping, which is the
+# whole reason that file exists. And not a pixel on screen either, because
+# every one of these failures happened before there was a window to look at.
+LOGDIR="$HOME/Library/Application Support/interval"
+rm -f "$LOGDIR/window.log"
+"$OUT/Mac/interval.app/Contents/MacOS/interval-Mac-$CONF" \
+  -intervalbridge="ws://127.0.0.1:1" > /tmp/interval-smoke.log 2>&1 &
+SMOKE=$!
+STARTED=""
+for _ in $(seq 1 120); do
+  # STDOUT, not the window's own log file. The log file is a convenience and
+  # can fail; stdout is the C runtime and cannot. See IntervalSay.
+  if grep -qs "interval: the window is up" /tmp/interval-smoke.log; then STARTED=yes; break; fi
+  kill -0 "$SMOKE" 2>/dev/null || break
+  sleep 1
+done
+kill "$SMOKE" 2>/dev/null || true
+wait "$SMOKE" 2>/dev/null || true
+if [ -z "$STARTED" ]; then
+  echo "THE CLIENT DOES NOT START. It was built and installed and it is not playable."
+  echo "the newest crash report says why:"
+  ls -t "$HOME/Library/Logs/DiagnosticReports" 2>/dev/null | grep -i "interval-Mac" | head -1
+  echo "  (read the \"termination\" field: a missing library is named there in full)"
+  tail -5 /tmp/interval-smoke.log 2>/dev/null
+  exit 1
+fi
+echo "it starts"
 
 # 5. AND A ZIP FOR THE NODE TO HAND OUT.
 #

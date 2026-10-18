@@ -1,4 +1,10 @@
 #include "IntervalHand.h"
+#include "Misc/CommandLine.h"
+#include "Misc/FileHelper.h"
+#include "HAL/PlatformProcess.h"
+#include "Misc/Paths.h"
+#include "HAL/FileManager.h"
+#include "Misc/Parse.h"
 #include "IntervalLook.h"
 #include "ProceduralMeshComponent.h"
 #include "IntervalStructures.h"
@@ -69,9 +75,75 @@ AIntervalHand::AIntervalHand()
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 }
 
+// ---- WHAT THE WINDOW HAS TO SAY, IN A FILE IT WRITES ITSELF ----
+//
+// UE_LOG is compiled out of a Shipping build and the client people download is
+// Shipping, so a window that logs is a window that is silent in the only place
+// it matters. Source/interval.Target.cs has the whole story and why
+// `bUseLoggingInShipping` is not available here.
+//
+// `FFileHelper` is not compiled out. So anything the window must be able to
+// say to a person who is not running an editor is said here, in one line, in
+// a file beside the one the bridge already writes:
+//
+//   ~/Library/Logs/interval/window.log
+//
+// APPENDED, never truncated, and only ever a handful of lines a second: this
+// is for the window reporting on itself, not for a log of everything.
+static void IntervalSay(const FString& Line)
+{
+	// ---- BESIDE THE BRIDGE'S OWN LOG, WHICH IS A PLACE PEOPLE ARE TOLD ABOUT
+	//
+	// NOT `FPaths::ProjectLogDir()`, which was the first answer and wrote
+	// nothing: in a packaged Mac app that is a folder inside the signed bundle
+	// and the file never appeared, so the window looked as though it had never
+	// reached BeginPlay when in fact it was already talking to the bridge.
+	//
+	// `UserSettingsDir()` is ~/Library/Application Support, where the launcher
+	// already keeps the key, the chosen node and `bridge.log` -- and where it
+	// already tells a person to look when something goes wrong. One folder,
+	// two logs, one sentence to say.
+	const FString Path = FString(FPlatformProcess::UserSettingsDir())
+		/ TEXT("interval") / TEXT("window.log");
+	const FString Stamped = FDateTime::Now().ToString(TEXT("%H:%M:%S")) + TEXT("  ") + Line
+		+ LINE_TERMINATOR;
+	const bool bWrote = FFileHelper::SaveStringToFile(Stamped, *Path,
+		FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM,
+		&IFileManager::Get(), FILEWRITE_Append);
+	// ---- AND ON STDOUT AS WELL, WHICH NOTHING CAN COMPILE OUT ----
+	//
+	// The first cut of this wrote the file and nothing appeared, anywhere on
+	// the disk, while the window was demonstrably running and ticking the
+	// world. A write that fails and says nothing is worse than no write: it
+	// read as "the window never started", and that is what sent the build's
+	// own start test to a false verdict.
+	//
+	// `printf` is the C runtime. It is not UE_LOG, it is not compiled out of
+	// Shipping, and the launcher has the window's stdout, so a person who
+	// started it from a terminal sees this whatever else fails. The file is
+	// the convenience; this is the thing that cannot lie.
+	printf("interval: %s%s\n", TCHAR_TO_UTF8(*Line),
+	       bWrote ? "" : "   (and the window's own log could not be written)");
+	fflush(stdout);
+}
+
 void AIntervalHand::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// ASKED FOR ON THE COMMAND LINE, the same way the node and the key are.
+	// See bSayFrames in IntervalHand.h.
+	// ALWAYS ONE LINE, which is the whole point of the file: a person whose
+	// window showed them nothing can say whether it ran, and the build script
+	// can wait for it instead of reporting success about a client that dies
+	// before `main`. See the "does it start" step in Tools/client.sh.
+	IntervalSay(TEXT("the window is up"));
+	bSayFrames = FParse::Param(FCommandLine::Get(), TEXT("intervalframes"));
+	if (bSayFrames)
+	{
+		UE_LOG(LogIntervalHand, Log, TEXT("saying the frame time once a second"));
+		IntervalSay(TEXT("the window will say its frame time once a second"));
+	}
 
 	// ---- THE MARK A CLICK LEAVES ----
 	//
@@ -3363,6 +3435,33 @@ void AIntervalHand::Stop()
 void AIntervalHand::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+	// ---- AND HOW FAST THE WINDOW IS RUNNING, IF ANYBODY ASKED ----
+	//
+	// See bSayFrames in IntervalHand.h for why this exists at all: the client
+	// people play is Shipping, and Shipping has no `stat unit` in it.
+	if (bSayFrames)
+	{
+		FrameGaps.Add(DeltaSeconds * 1000.f);
+		const double Now = FPlatformTime::Seconds();
+		if (FramesSaidAt == 0.0)
+		{
+			FramesSaidAt = Now;
+		}
+		else if (Now - FramesSaidAt >= 1.0 && FrameGaps.Num() > 0)
+		{
+			FrameGaps.Sort();
+			const float Mid = FrameGaps[FrameGaps.Num() / 2];
+			const float Ninth = FrameGaps[(FrameGaps.Num() * 9) / 10];
+			const FString Said = FString::Printf(
+				TEXT("FRAMES %.1f ms median, %.1f ms at the ninth tenth, %.1f ms worst, %.1f a second"),
+				Mid, Ninth, FrameGaps.Last(), 1000.f / FMath::Max(Mid, 0.001f));
+			UE_LOG(LogIntervalHand, Log, TEXT("%s"), *Said);
+			IntervalSay(Said);
+			FrameGaps.Reset();
+			FramesSaidAt = Now;
+		}
+	}
 	// On the FRAME, not the interval: a mark that settled once a second would
 	// be a stutter in the one place the window is answering a human hand.
 	DriveMark();
