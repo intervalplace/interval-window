@@ -134,6 +134,25 @@ g = read(GROUND, 'Scatter', 'Roofs', 'GroundMaterial')
 have['Scatter'], have['Roofs'] = g['Scatter'], g['Roofs']
 have['GroundMaterial'] = g['GroundMaterial']
 
+# ---- AND A WORD ABOUT bWholeIsland, WHICH THIS FILE CANNOT FIX ----
+#
+# The ground actor had `bWholeIsland` saved TRUE, which draws every chunk the
+# island has at once: 112 chunks and 1,328,155 scatter instances against the 9
+# that streaming asks for, most of a 92 ms frame, and the window reported as
+# impossible to play. The obvious fix is to write false here and save, and it
+# does not work. THIS LEVEL IS ONE FILE PER ACTOR: every actor's value lives
+# in its own package under Content/__ExternalActors__, and `save_assets` on
+# the map's own path returns true and writes none of them.
+#
+# Which also says something larger about this script. Nothing in that folder
+# has been written since September, so every table these actors carry is
+# weeks stale, and what the world draws is the LOOK ASSET this file rewrites
+# and saves by itself. The writes to the actors further down are the fallback
+# path and a courtesy; they are not what ships.
+#
+# So the whole-island decision was moved out of the level altogether and is
+# asked for on the command line now. See AIntervalGround::BeginPlay.
+
 # ---------------------------------------------------------------------------
 # WHAT ELSE EACH GROUND GROWS.
 #
@@ -1450,34 +1469,40 @@ KIT.update({n: '/Game/Interval/Props/%s.%s' % (n, n) for n in (
 # THE PROJECT'S OWN PROPS ARE NOT TOUCHED. `parts.HATCHET`, `PICKAXE` and `ROD`
 # were authored for this hand and already sit right; only the two CC0 kits
 # needed telling which way round they were.
-# The same two numbers as `parts.GRIP_WEAPON` and `parts.GRIP_SHIELD`, which
-# is where the derivation is written down. They are repeated rather than
-# imported because this file's `hand` and that file's `held` are two spellings
-# of the same idea and joining them is a bigger change than this was.
-GRIP_WEAPON = dict(pitch=68.5, yaw=102.7, roll=-164.0)
-GRIP_SHIELD = dict(pitch=-9.1, yaw=-132.6, roll=-155.1)
-# AND WHERE ALONG ITSELF EACH IS HELD; see `parts.GRIP_WEAPON_OFF` for the
-# reasoning. Both meshes are modelled about their middle, so the axe hung a
-# quarter of its haft below the fist and the shield stood up past the ear.
-GRIP_WEAPON_OFF = dict(ox=1.0, oy=12.1, oz=-4.6)
-GRIP_SHIELD_OFF = dict(ox=8.0, oy=-10.3, oz=13.6)
+# ---- ONE GRIP, NOT TWO ----
+#
+# This file used to carry its own copy of these numbers, with a note saying
+# they were the same as parts.py's and that joining them was a bigger change
+# than it was worth. They were NOT the same: this copy said (68.5, 102.7,
+# -164.0) and parts.py said a pure roll of 145, so a tool drawn through `hand`
+# here and a weapon drawn through `held` there sat in the fist two different
+# ways, and fixing one fixed half the world.
+#
+# They are imported now. Two spellings of one idea is how a measurement gets
+# made twice and corrected once.
+from parts import GRIP_TURN_WEAPON, GRIP_SHIELD, grip_offset
 
 
 def hand(mesh, bone='hand_r', s=1.0, ox=None, oy=None, oz=None,
          pitch=None, yaw=None, roll=None):
     # The grip, unless a caller has a reason of its own. `hand_l` is the off
     # hand and the only thing held there is a shield.
-    grip = GRIP_SHIELD if bone == 'hand_l' else GRIP_WEAPON
-    where = GRIP_SHIELD_OFF if bone == 'hand_l' else GRIP_WEAPON_OFF
-    if pitch is None: pitch = grip['pitch']
-    if yaw is None:   yaw   = grip['yaw']
-    if roll is None:  roll  = grip['roll']
-    if ox is None: ox = where['ox']
-    if oy is None: oy = where['oy']
-    if oz is None: oz = where['oz']
+    grip = GRIP_SHIELD if bone == 'hand_l' else GRIP_TURN_WEAPON
+    if pitch is None: pitch = grip[0]
+    if yaw is None:   yaw   = grip[1]
+    if roll is None:  roll  = grip[2]
     # The mesh's own correction, from parts.py, so no caller here carries a
     # number for it and no later table can outrank it.
     k = s * MESH_SCALE.get(mesh, 1.0)
+    # AND WHERE ALONG ITSELF IT IS HELD, DERIVED. This used to be one fixed
+    # offset per bone, which cannot be right for more than one mesh: a pivot
+    # sits in a different place on every piece in the kit. parts.py already
+    # works it out from the mesh's own extent and the fraction up itself a
+    # hand closes, and that is what is used here now.
+    _where = grip_offset(mesh, k, pitch, yaw, roll)
+    if ox is None: ox = _where[0]
+    if oy is None: oy = _where[1]
+    if oz is None: oz = _where[2]
     return {'pieces': [{
         'mesh': {'refPath': KIT[mesh]},
         'material': None,

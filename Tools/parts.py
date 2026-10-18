@@ -935,7 +935,19 @@ def kit_prop(name, ox=40.0, oy=0.0, oz=0.0, s=1.0, yaw=0.0, pitch=0.0, roll=0.0)
 # own +Z -- see kit_bounds.json, which was read out of the editor rather than
 # remembered -- so this one turn stands all of them up.
 GRIP = (0.0, 0.0, 0.0)
-GRIP_TURN = (0.0, 0.0, 145.0)
+
+# ---- A STAFF IS NOT A WEAPON AND KEEPS THE OLD TURN ----
+#
+# 145 degrees of roll stands a shaft vertically in the fist, which is wrong for
+# a hatchet and exactly right for a staff: a watchman leans on his and a drover
+# plants hers, and `staff()` below works the grip's height out so that the heel
+# reaches the ground. This is the one grip in the project that was ever
+# photographed and found correct, and it stays as it was.
+#
+# What it is NOT is the grip for everything else. It was handed to every weapon
+# in the kit and stood them all on their ends; see GRIP_TURN_WEAPON further
+# down for the measurement that settles that.
+GRIP_TURN_STAFF = (0.0, 0.0, 145.0)
 
 
 import json as _json, os as _os
@@ -1048,7 +1060,7 @@ def staff(mat=None, h=2.0, z=100, lean=6.0):
     s = h / STAFF_TALL
     lo, hi = KIT_BOUNDS['Wizard_Staff1']['min'][2], KIT_BOUNDS['Wizard_Staff1']['max'][2]
     frac = min(max(HAND_HIGH / (h * 100.0), 0.05), 0.9)
-    turn = (GRIP_TURN[0] + lean, GRIP_TURN[1], GRIP_TURN[2])
+    turn = (GRIP_TURN_STAFF[0] + lean, GRIP_TURN_STAFF[1], GRIP_TURN_STAFF[2])
     ox, oy, oz = grip_offset('Wizard_Staff1', s, *turn, frac=frac)
     worn = P(STAFF_MESH, mat, s, s, s, ox=ox, oy=oy, oz=oz,
              pitch=turn[0], yaw=turn[1], roll=turn[2])
@@ -2147,37 +2159,53 @@ def weapon(word, shape):
 
 # ---- HOW A KIT ITEM SITS IN THE FIST ----
 #
-# These were hung on the bone with no rotation at all, which is not the same
-# as the right one, and it was reported off the stream: "the way he holds the
-# shield and hatchet is a little .. off."
+# MEASURED, AND THEN MEASURED AGAIN BECAUSE IT WAS STILL WRONG.
 #
-# It is measurable rather than a matter of taste. Read `hand_r` and `hand_l`
-# out of the pose the window was actually showing and turn the bone's own axes
-# into the body's space, and a mesh whose blade runs +Z -- which is how this
-# whole kit is modelled, checked against the bounds of the sword, the spear,
-# the dagger and the hatchet -- came out pointing (-0.15, 0.53, -0.83). That
-# is a hatchet held HEAD DOWN behind the leg, which is exactly what the
-# photograph shows. The shield, whose face is its local +Y, faced
-# (-0.46, 0.78, 0.42): a tea tray held up at the sky.
+# The first answer here was derived from one photograph of one citizen in one
+# pose, and the numbers it produced were a pure ROLL of 145 degrees for a
+# weapon and (-9.1, -132.6, -155.1) for a shield. Reported as still wrong, and
+# it was: asked what the live window was actually doing, in the body's own
+# frame of forward / left / up,
 #
-# So the two rotations below are derived and not dialled. They are the answer
-# to "what relative rotation puts the blade up and forward, and the shield's
-# face out from the body", and because a relative rotation is in BONE space it
-# is the same grip in every pose afterwards -- a hand that turns turns what it
-# is holding.
+#   the axe's length pointed .... ( 0.15, -0.10,  0.98)   straight up
+#   the shield's face pointed .... (-0.29, -0.78,  0.56)  across the body, at
+#                                                          the sky
 #
-#   blade (+Z local) -> ( 0.05,  0.60,  0.80)   up and forward
-#   edge  (+X local) -> (-0.04,  0.80, -0.60)   facing the way they face
-#   shield face (+Y) -> ( 0.38,  0.92,  0.05)   out from the body
-#   shield top  (+Z) -> (-0.02, -0.05,  1.00)   up
+# An axe stood on end in the fist, and a shield carried flat like a tray with
+# its face turned over the citizen's own shoulder. The note that used to be
+# here said the tray had been fixed. It had not.
 #
-# NOT VERTICAL, DELIBERATELY. The first derivation stood the haft almost
-# straight up, which is correct and invisible: this camera looks down at about
-# sixty degrees, so an upright weapon is three pixels of foreshortening. Fifty
-# degrees off the horizontal reads as a weapon from above and still reads as a
-# grip from the side.
-GRIP_WEAPON = (68.5, 102.7, -164.0)     # pitch, yaw, roll
-GRIP_SHIELD = (-9.1, -132.6, -155.1)
+# WHY A DERIVATION CAN BE RIGHT AND STILL WRONG. A relative rotation on a bone
+# is pose-independent -- the hand turns and what it holds turns with it -- but
+# the DIRECTIONS it was fitted to were read out of one pose, and in that pose
+# the arm happened to be raised and out in front. A grip fitted that way reads
+# correctly from exactly one stance and from nowhere else, and the citizen the
+# complaint was about was walking.
+#
+# SO THE RULE IS STATED IN THE BONE'S OWN AXES, which do not care about the
+# pose at all. On this skeleton the hand bone's X runs ALONG the arm, wrist to
+# elbow -- there is no finger bone for `hand_r` to point at, so it keeps its
+# parent's direction -- and every mesh in this kit runs along its own +Z with
+# a shield's face at its own +Y. That gives two sentences and two rotations:
+#
+#   A WEAPON RUNS OUT PAST THE FINGERS. Its length lies along the bone's -X,
+#   so it continues the line of the forearm whatever the arm is doing. Hanging
+#   arm, the axe hangs; arm raised to strike, the axe leads. (90, 0, 0).
+#
+#   A SHIELD STANDS UP ON THE ARM WITH ITS FACE OUT. Its length lies along the
+#   bone's Y, which is up, and its face along the bone's X, which for the off
+#   hand is away from the body. (90, 0, 90).
+#
+# And measured back out of the window afterwards, the same way:
+#
+#   the axe's length points ...... ( 0.81, -0.55, -0.20)  out along the arm
+#   the shield's length points .... ( 0.06,  0.04,  1.00)  up
+#   the shield's face points ...... (-0.12,  0.99, -0.04)  out to their left
+#
+# Photographed from in front, from the side and from behind as well, because a
+# weapon pointing at the camera reads as correct from one angle and is not.
+GRIP_TURN_WEAPON = (90.0, 0.0, 0.0)     # pitch, yaw, roll
+GRIP_SHIELD = (90.0, 0.0, 90.0)
 
 # ---- AND WHERE ALONG ITSELF THE THING IS HELD ----
 #
@@ -2218,8 +2246,9 @@ GRIP_SHIELD = (-9.1, -132.6, -155.1)
 #
 # So the offset is no longer chosen. It is DERIVED, from three things:
 #
-#   1. GRIP and GRIP_TURN, the hand's own transform. Measured once, by eye, on
-#      the watchman's staff, and the only numbers here anybody looked at.
+#   1. GRIP and the turn, the hand's own transform. See GRIP_TURN_WEAPON and
+#      GRIP_SHIELD above, which are stated in the bone's own axes rather than
+#      fitted to one photographed pose.
 #   2. The mesh's own extent, read out of the editor into `kit_bounds.json`.
 #      Every weapon in this kit runs along its own +Z, which is the same axis
 #      the staff runs along -- so the hand's turn serves all of them.
@@ -2235,7 +2264,7 @@ def held(mesh, bone='hand_r', s=1.0, ox=None, oy=None, oz=None,
     # EVERY WEAPON IN THIS KIT RUNS ALONG ITS OWN +Z, and so does the staff the
     # hand was measured on -- see kit_bounds.json. So a weapon takes the hand's
     # own turn, and does not need one reasoned out from its blade's axes.
-    grip = GRIP_SHIELD if bone == 'hand_l' else GRIP_TURN
+    grip = GRIP_SHIELD if bone == 'hand_l' else GRIP_TURN_WEAPON
     if pitch is None: pitch = grip[0]
     if yaw is None:   yaw = grip[1]
     if roll is None:  roll = grip[2]
@@ -2539,14 +2568,16 @@ HATCHET = held('Axe_Small')
 PICKAXE = held('Pickaxe_Bronze')
 
 # ========================= THE GRIP MEASURING RIG ==========================
-# A GRIP can only be judged from a picture of a hand, and the only hands this
-# project can photograph at full resolution are a KEEPER'S: a keeper stands
-# still in a world the free camera can walk up to, where `cap.py` renders at
-# whatever size is asked. A citizen holding a weapon exists only inside a Play
-# session, and a Play capture is the whole editor window scaled to 1280px, in
-# which a fist is about a dozen pixels across. That is why `GRIP_WEAPON_OFF`
-# was DERIVED rather than measured, and why it is the one grip in this file
-# nobody has ever actually looked at.
+# A GRIP can only be judged from a picture of a hand, and this said that a
+# citizen holding a weapon exists only inside a Play session and that a Play
+# capture is the editor window scaled down, in which a fist is a dozen pixels.
+# That was true and it is not any more: `Tools/photo.py` points the viewport
+# at a named BONE on a named figure in a live session and takes a full-sized
+# shot of it, from any side, so a citizen's own fist can be looked at.
+#
+# Which is how the grips below were finally settled, after two rounds of
+# deriving them from one pose and shipping them wrong. The rig here is still
+# the quickest way to try a weapon the citizen does not happen to be carrying.
 #
 # So the watchman borrows a weapon for as long as it takes to look at it. It
 # costs nothing when it is not asked for, and it is how GRIP was found to be
