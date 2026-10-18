@@ -2185,8 +2185,13 @@ def weapon(word, shape):
 # SO THE RULE IS STATED IN THE BONE'S OWN AXES, which do not care about the
 # pose at all. On this skeleton the hand bone's X runs ALONG the arm, wrist to
 # elbow -- there is no finger bone for `hand_r` to point at, so it keeps its
-# parent's direction -- and every mesh in this kit runs along its own +Z with
-# a shield's face at its own +Y. That gives two sentences and two rotations:
+# parent's direction. And every mesh in this kit that is ever HELD runs along
+# its own +Z, with a shield's face at its own +Y: checked against the measured
+# extents of all twenty-five rather than assumed, since the whole rule rests on
+# it. The one exception is `Arrow`, which runs along +Y, and an arrow is never
+# held -- it is a thing lying on the bowyer's stall with a rotation of its own.
+#
+# That gives two sentences and two rotations:
 #
 #   A WEAPON RUNS OUT PAST THE FINGERS. Its length lies along the bone's -X,
 #   so it continues the line of the forearm whatever the arm is doing. Hanging
