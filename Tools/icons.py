@@ -575,11 +575,21 @@ def shoot(w, mesh_path, name):
                 comp.set_update_animation_in_editor(True)
                 # ---- AND TO TICK ITS POSE WHILE NOTHING IS LOOKING ----
                 #
-                # A skeletal mesh component defaults to
-                # `OnlyTickPoseWhenRendered`, and a mesh spawned ten thousand
-                # units out in an empty editor level and photographed by a
-                # SceneCapture2D is not "rendered" by that test. So this is
-                # the right thing to ask for and it is asked for here.
+                # A mesh spawned ten thousand units out in an empty editor
+                # level and photographed by a SceneCapture2D may well not
+                # count as "rendered", so asking for the pose anyway is the
+                # right thing and it is asked for here.
+                #
+                # WHAT THIS USED TO SAY, AND IT WAS WRONG: that a skeletal
+                # mesh component "defaults to OnlyTickPoseWhenRendered". It
+                # does not. SkeletalMeshComponent.cpp sets
+                # `AlwaysTickPoseAndRefreshBones`, which is the most expensive
+                # of the four, and the mistake cost real time elsewhere: this
+                # world stands up a thousand figures and every one of them was
+                # refreshing its bones every frame whether anything could see
+                # it or not, because the default was believed to be the thrifty
+                # one and nobody looked. 9.7 ms of a 71 ms frame. See
+                # IntervalThriftyFigure in IntervalAnim.h.
                 #
                 # AND IT IS NOT ENOUGH. Proved with a probe rather than
                 # guessed: the Body bone's transform is byte-identical before

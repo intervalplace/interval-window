@@ -107,3 +107,32 @@ private:
 
 	friend struct FIntervalAnimProxy;
 };
+
+/**
+ * WHAT A FIGURE COSTS WHEN NOBODY IS LOOKING AT IT, which should be nothing.
+ *
+ * This world stands up about a thousand skeletal meshes at once: 655 for the
+ * citizens and mobs and 350 for the keepers at their stalls, every one of them
+ * with its own animation instance. Not one of them had either of the two
+ * settings that decide what an off-screen figure costs, so a shepherd on the
+ * far side of the island was having its pose evaluated, bone by bone, sixty
+ * times a second so that nothing could see it. Measured: the keepers alone
+ * were 9.7 ms of a 71 ms frame.
+ *
+ *   OnlyTickPoseWhenRendered -- a figure out of every view evaluates nothing.
+ *     It keeps ticking its animation BLUEPRINT, so it still knows what it is
+ *     doing and is in the right pose the frame it comes back into view; what
+ *     it stops doing is the skeleton.
+ *
+ *   update rate optimisation -- a figure that IS rendered but is small and far
+ *     away evaluates its pose every second or fourth frame and interpolates
+ *     between, which at thirty metres on a top-down camera is a difference
+ *     nobody can see. The engine picks the rate off the screen size.
+ *
+ * Both are per component and both are free. Called on the LEAD of a figure;
+ * the followers take the lead's pose and evaluate nothing of their own.
+ *
+ * The draw distance is a separate matter and is NOT set here: what a citizen
+ * can see is the world's business and belongs in a level's own tables.
+ */
+INTERVALBRIDGE_API void IntervalThriftyFigure(class USkeletalMeshComponent* Lead);

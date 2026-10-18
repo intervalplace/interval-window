@@ -5,6 +5,7 @@
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimationPoseData.h"
 #include "AnimationRuntime.h"
+#include "Components/SkeletalMeshComponent.h"
 
 void FIntervalPlaying::Advance(float DeltaSeconds)
 {
@@ -124,4 +125,22 @@ void UIntervalAnimInstance::CrossFade(UAnimSequence* Next, float Rate, bool bLoo
 void UIntervalAnimInstance::SetRate(float Rate)
 {
 	Proxy.Arriving.Rate = Rate;
+}
+
+// See the note on this in IntervalAnim.h: what a figure nobody is looking at
+// should cost, which is nothing.
+void IntervalThriftyFigure(USkeletalMeshComponent* Lead)
+{
+	if (!Lead)
+	{
+		return;
+	}
+	Lead->VisibilityBasedAnimTickOption =
+		EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+	Lead->bEnableUpdateRateOptimizations = true;
+	// And no per-bone motion blur, which keeps a SECOND set of bone transforms
+	// for every figure so that the blur can tell where each bone was last
+	// frame. On a top-down camera at this range it buys nothing anybody can
+	// see, and it is a thousand skeletons' worth of transforms.
+	Lead->bPerBoneMotionBlur = false;
 }

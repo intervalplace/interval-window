@@ -1634,6 +1634,8 @@ void AIntervalCitizens::UpdatePeople(float Alpha, const FVector& ViewLocation, b
 					// so every change of verb was a cut.
 					Piece->SetAnimInstanceClass(UIntervalAnimInstance::StaticClass());
 					Piece->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+					// See IntervalThriftyFigure in IntervalAnim.h.
+					IntervalThriftyFigure(Piece);
 					Mesh = Piece;
 				}
 				else
@@ -2403,6 +2405,8 @@ void AIntervalCitizens::UpdateBeasts(float Alpha, float DeltaSeconds,
 			Skin->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			Skin->SetAnimInstanceClass(UIntervalAnimInstance::StaticClass());
 			Skin->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+			// See IntervalThriftyFigure in IntervalAnim.h.
+			IntervalThriftyFigure(Skin);
 			// EVERY SLOT, NOT THE FIRST. These figures are modular -- skin, hair,
 			// eyes and outfit are separate slots on one mesh -- so painting slot
 			// zero gave a wraith in a mossy shirt with a citizen's face still on

@@ -1,4 +1,6 @@
 #include "IntervalGround.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "IntervalWings.h"
 #include "IntervalSmallLife.h"
 #include "IntervalSmallLife.h"
@@ -82,6 +84,42 @@ const TArray<uint8>& AIntervalGround::ShapeOfTiles() const
 void AIntervalGround::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// ---- WHATEVER THE LEVEL SAVED, THE COMMAND LINE DECIDES ----
+	//
+	// `bWholeIsland` draws every chunk at once. It is for the chart and for
+	// screenshots and the comment in HandleReady has said as much all along.
+	// It was SAVED AS TRUE on this actor and shipped that way for months: 112
+	// chunks and 1,328,155 scatter instances against the 9 streaming asks for,
+	// which was most of a 92 ms frame and was reported as the window being
+	// impossible to play.
+	//
+	// IT CANNOT BE FIXED BY SAVING THE LEVEL, which was the first attempt.
+	// This level is one file per actor, so the ground actor's value lives in
+	// its own package under Content/__ExternalActors__, and `save_assets` on
+	// the map's path returns true and writes none of them. Nothing in that
+	// folder has been written since September, which also means every table
+	// the level's actors carry has been stale for weeks and what the world
+	// actually draws comes from the look asset. A saved property is therefore
+	// not somewhere this project can put a decision and expect to find it
+	// again.
+	//
+	// So the decision moves OUT of the level, where a stale true cannot reach
+	// it and nobody has to remember. The chart asks for it by hand:
+	//
+	//   interval ... -intervalwholeisland
+	//
+	// This is the same lesson as the `.gitignore` note in CLAUDE.md: the
+	// defence is not a rule written next to the thing, it is not depending on
+	// the thing.
+	const bool bLevelSaidSo = bWholeIsland;
+	bWholeIsland = FParse::Param(FCommandLine::Get(), TEXT("intervalwholeisland"));
+	if (bLevelSaidSo && !bWholeIsland)
+	{
+		UE_LOG(LogIntervalGround, Log,
+			TEXT("the level says draw the whole island; streaming it instead. ")
+			TEXT("Pass -intervalwholeisland for the chart."));
+	}
 	// ---- A TIMER, NOT A TICK ----
 	//
 	// The ground has to do a little work every frame to pace chunk building,
@@ -241,13 +279,37 @@ void AIntervalGround::HandleReady()
 	int32 WorldW = 0, WorldH = 0;
 	Bridge->GetWorldSize(WorldW, WorldH);
 	const int32 ChunkTiles = UIntervalGeometry::ChunkTiles;
+	int32 Asked = 0;
 	for (int32 CY = 0; CY * ChunkTiles < WorldH; ++CY)
 	{
 		for (int32 CX = 0; CX * ChunkTiles < WorldW; ++CX)
 		{
 			Want(FIntPoint(CX, CY));
+			++Asked;
 		}
 	}
+
+	// ---- AND IT SAYS SO, BECAUSE IT WAS LEFT ON FOR MONTHS ----
+	//
+	// `bWholeIsland` was SAVED AS TRUE on the level's ground actor. The
+	// comment above has said "not what anyone should play on" the whole time
+	// and nobody was reading comments; what was being read was the window,
+	// which was holding a hundred and twelve chunks and 1,328,155 scatter
+	// instances instead of the twenty-five chunks streaming keeps. That is
+	// most of a 92 millisecond frame, and it was reported as "walking is the
+	// opposite of smooth" and "impossible".
+	//
+	// A level-placed actor's saved property beats the C++ default, so the
+	// default being false proved nothing and the note further down this file
+	// about `RainRadius` had already been burned by exactly this. The only
+	// defence that works is for the window to say what it is doing, which is
+	// the same rule as `bReportUndrawnKinds`: a grep of the log answers it,
+	// and nobody has to think of the question first.
+	UE_LOG(LogIntervalGround, Warning,
+		TEXT("DRAWING THE WHOLE ISLAND: %d chunks asked for at once. This is for ")
+		TEXT("the chart and for screenshots and it is not playable. Streaming keeps ")
+		TEXT("%d. Clear bWholeIsland on the ground actor."),
+		Asked, (2 * Rings + 1) * (2 * Rings + 1));
 }
 
 void AIntervalGround::HandleFrame()

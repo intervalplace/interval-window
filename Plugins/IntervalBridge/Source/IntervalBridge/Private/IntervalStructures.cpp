@@ -1724,6 +1724,9 @@ bool AIntervalStructures::StandFigure(const FString& Id, const FIntervalPropKind
 		Lead->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		Lead->SetAnimInstanceClass(UIntervalAnimInstance::StaticClass());
 		Lead->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+		// What a keeper on the far side of the island costs. See
+		// IntervalThriftyFigure in IntervalAnim.h: these 350 were 9.7 ms.
+		IntervalThriftyFigure(Lead);
 		Lead->RegisterComponent();
 
 		for (const TObjectPtr<USkeletalMesh>& Part : Kind.SkeletalParts)

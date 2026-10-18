@@ -42,7 +42,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interval", meta = (ClampMin = "0", ClampMax = "4"))
 	int32 Rings = 1;
 
-	/** Draw the whole island regardless of where the citizen is. For the chart, and for screenshots. */
+	/**
+	 * Draw the whole island regardless of where the citizen is. For the chart,
+	 * and for screenshots.
+	 *
+	 * WHATEVER IS SAVED HERE IS OVERWRITTEN AT BeginPlay by `-intervalwholeisland`
+	 * on the command line, and the long note there says why: this was saved
+	 * true and shipped that way for months. Setting it in the editor moves
+	 * nothing.
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interval")
 	bool bWholeIsland = false;
 

@@ -1,6 +1,7 @@
 #include "IntervalChunk.h"
 
 #include "Components/InstancedStaticMeshComponent.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
 
 #include "IntervalGround.h"
 #include "IntervalGeometry.h"
@@ -874,6 +875,10 @@ void AIntervalChunk::BuildScatter(const TArray<FIntervalScatterKind>& ScatterByC
 			Pair.Value->ClearInstances();
 		}
 	}
+	// Every place a plant is to stand, kept by the pool it belongs to and
+	// handed over in one call per pool at the end. See the note at the bottom.
+	TMap<uint32, TArray<FTransform>> Sown;
+
 	const bool bHasSpine = (SpineScatter.Mesh != nullptr) && SpineScatter.PerTile > 0.f;
 	if (ScatterByCode.Num() == 0 && !bHasSpine)
 	{
@@ -1023,7 +1028,26 @@ void AIntervalChunk::BuildScatter(const TArray<FIntervalScatterKind>& ScatterByC
 			UInstancedStaticMeshComponent* Pool = Existing ? Existing->Get() : nullptr;
 			if (!Pool)
 			{
-				Pool = NewObject<UInstancedStaticMeshComponent>(this);
+				// ---- HIERARCHICAL, BECAUSE THERE ARE HUNDREDS OF THOUSANDS ----
+				//
+				// This was a plain `UInstancedStaticMeshComponent`, which keeps
+				// its instances as one flat list and hands the whole list to
+				// the renderer every frame. The per-instance cull distance then
+				// decides what is DRAWN, and nothing decides what is
+				// considered: nine chunks of this island hold 368,733 scatter
+				// instances, and measured with the draw distance wound down to
+				// twenty metres, where essentially none of it is drawn, it
+				// still cost 8.9 ms a frame.
+				//
+				//   cull at 180 m .... 46.6 ms
+				//   cull at  20 m .... 40.9      so 5.7 ms is what is drawn
+				//   no grass at all .. 32.0      and 8.9 ms is merely having it
+				//
+				// The hierarchical component keeps a tree of clusters instead,
+				// so a cluster of grass behind the citizen is rejected once
+				// rather than ten thousand times. It is the class the engine's
+				// own foliage uses and for exactly this reason.
+				Pool = NewObject<UHierarchicalInstancedStaticMeshComponent>(this);
 				Pool->SetupAttachment(Mesh);
 				Pool->SetMobility(EComponentMobility::Movable);
 				Pool->SetStaticMesh(Grown);
@@ -1060,8 +1084,24 @@ void AIntervalChunk::BuildScatter(const TArray<FIntervalScatterKind>& ScatterByC
 				ScatterPools.Add(PoolKey, Pool);
 			}
 
-			Pool->AddInstance(FTransform(FRotator(0.f, Yaw, 0.f), Location, Kind.Scale * Jit), true);
+			// GATHERED, NOT ADDED. `AddInstance` on a hierarchical component
+			// marks its cluster tree out of date, and this loop runs thirty
+			// thousand times for one chunk of meadow. Collected here and
+			// handed over in one call below, so the tree is built once a pool.
+			Sown.FindOrAdd(PoolKey).Add(
+				FTransform(FRotator(0.f, Yaw, 0.f), Location, Kind.Scale * Jit));
 			}   // each try
+		}
+	}
+
+	for (TPair<uint32, TArray<FTransform>>& Pair : Sown)
+	{
+		if (TObjectPtr<UInstancedStaticMeshComponent>* Pool = ScatterPools.Find(Pair.Key))
+		{
+			if (*Pool && Pair.Value.Num() > 0)
+			{
+				(*Pool)->AddInstances(Pair.Value, false, true);
+			}
 		}
 	}
 }
