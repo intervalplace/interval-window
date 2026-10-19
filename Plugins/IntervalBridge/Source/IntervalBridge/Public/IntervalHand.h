@@ -922,4 +922,34 @@ private:
 	bool bSayFrames = false;
 	TArray<float> FrameGaps;
 	double FramesSaidAt = 0.0;
+
+	/**
+	 * ANYTHING DRAWN THE SIZE OF A HILL SAYS SO, ONCE.
+	 *
+	 * Reported from the window for weeks as "massive tentacles", and once as
+	 * giant upside-down animals seen WHILE THE CLIENT WAS LOADING, with only
+	 * their legs and tails left above ground once the terrain arrived.
+	 *
+	 * Every still measurement of the island disagrees: all 1,288,609 scatter
+	 * and prop instances across seventy-two chunks were visited one at a time
+	 * and the largest thing on it is an eleven metre dead tree. A watcher on
+	 * a tick callback in the editor ran four thousand frames and saw nothing
+	 * over fifty metres either. Which proves only that the editor is not the
+	 * client, and that a thing seen for three seconds during a load cannot be
+	 * found by looking afterwards.
+	 *
+	 * THE SIZE THESE ASSETS ARE WHEN NOTHING SCALES THEM. The .glb creatures
+	 * import at about a hundred times life size and the tables divide it back
+	 * out, so a wolf is 1.3 m at a scale of 0.002341 -- and 555 metres at a
+	 * scale of one. A troll is 560, a scree imp 550, a goblin 468. Legs that
+	 * size are the columns, and a model authored Y-up and drawn without its
+	 * turn is on its back.
+	 *
+	 * So the window watches itself: twice a second it asks every actor it did
+	 * not place for anything whose drawn bounds are the size of a hill, and
+	 * names it once. It costs a loop over a few thousand already-computed
+	 * bounds and it is the only way to catch this where it happens.
+	 */
+	double WatchedAt = 0.0;
+	TSet<FName> SaidTooBig;
 };

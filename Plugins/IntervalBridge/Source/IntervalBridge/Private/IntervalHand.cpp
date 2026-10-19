@@ -5,6 +5,11 @@
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
 #include "Misc/Parse.h"
+#include "EngineUtils.h"
+#include "IntervalChunk.h"
+#include "IntervalHour.h"
+#include "Engine/StaticMeshActor.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "IntervalLook.h"
 #include "ProceduralMeshComponent.h"
 #include "IntervalStructures.h"
@@ -3435,6 +3440,74 @@ void AIntervalHand::Stop()
 void AIntervalHand::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+	// ---- AND IS ANYTHING BEING DRAWN THE SIZE OF A HILL ----
+	//
+	// See SaidTooBig in IntervalHand.h for what this is for and why nothing
+	// else could find it. Twice a second, and each mesh named once ever.
+	{
+		const double Now = FPlatformTime::Seconds();
+		if (Now - WatchedAt >= 0.5)
+		{
+			WatchedAt = Now;
+			// Forty metres of RADIUS, so eighty across: taller than anything
+			// this world builds. The sky, the rain drum and a chunk of ground
+			// are all legitimately vast and are not asked.
+			constexpr float TooBig = 4000.f;
+			if (UWorld* W = GetWorld())
+			{
+				for (TActorIterator<AActor> It(W); It; ++It)
+				{
+					AActor* A = *It;
+					if (!A || A->IsA(AIntervalChunk::StaticClass())
+						|| A->IsA(AIntervalHour::StaticClass())
+						|| A->IsA(AStaticMeshActor::StaticClass()))
+					{
+						continue;
+					}
+					for (UActorComponent* AC : A->GetComponents())
+					{
+						UPrimitiveComponent* P = Cast<UPrimitiveComponent>(AC);
+						if (!P || !P->IsVisible() || P->Bounds.SphereRadius < TooBig)
+						{
+							continue;
+						}
+						// NAMED BY ITS MESH, because that is the thing to go
+						// and look at. A component name is a number.
+						FName What = P->GetFName();
+						if (const UStaticMeshComponent* SM = Cast<UStaticMeshComponent>(P))
+						{
+							if (SM->GetStaticMesh()) { What = SM->GetStaticMesh()->GetFName(); }
+						}
+						else if (const USkeletalMeshComponent* SK = Cast<USkeletalMeshComponent>(P))
+						{
+							if (SK->GetSkeletalMeshAsset())
+							{
+								What = SK->GetSkeletalMeshAsset()->GetFName();
+							}
+						}
+						if (SaidTooBig.Contains(What))
+						{
+							continue;
+						}
+						SaidTooBig.Add(What);
+						const FVector At = P->GetComponentLocation();
+						const FVector Sc = P->GetComponentScale();
+						IntervalSay(FString::Printf(
+							TEXT("TOO BIG: '%s' on a %s is %.0f m across at tile %d,%d, ")
+							TEXT("z %.0f m, scale %.5f, turned %.0f,%.0f,%.0f"),
+							*What.ToString(), *A->GetClass()->GetName(),
+							P->Bounds.SphereRadius * 2.f / 100.f,
+							FMath::RoundToInt(At.X / 200.f), FMath::RoundToInt(At.Y / 200.f),
+							At.Z / 100.f, Sc.X,
+							P->GetComponentRotation().Pitch,
+							P->GetComponentRotation().Yaw,
+							P->GetComponentRotation().Roll));
+					}
+				}
+			}
+		}
+	}
 
 	// ---- AND HOW FAST THE WINDOW IS RUNNING, IF ANYBODY ASKED ----
 	//
