@@ -10,6 +10,8 @@
 #include "IntervalHour.h"
 #include "Engine/StaticMeshActor.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
+#include "ProceduralMeshComponent.h"
 #include "IntervalLook.h"
 #include "ProceduralMeshComponent.h"
 #include "IntervalStructures.h"
@@ -95,7 +97,7 @@ AIntervalHand::AIntervalHand()
 //
 // APPENDED, never truncated, and only ever a handful of lines a second: this
 // is for the window reporting on itself, not for a log of everything.
-static void IntervalSay(const FString& Line)
+void AIntervalHand::IntervalSay(const FString& Line) const
 {
 	// ---- BESIDE THE BRIDGE'S OWN LOG, WHICH IS A PLACE PEOPLE ARE TOLD ABOUT
 	//
@@ -130,6 +132,24 @@ static void IntervalSay(const FString& Line)
 	printf("interval: %s%s\n", TCHAR_TO_UTF8(*Line),
 	       bWrote ? "" : "   (and the window's own log could not be written)");
 	fflush(stdout);
+
+	// ---- AND DOWN THE BRIDGE, WHICH IS THE ONE CHANNEL THAT ARRIVES ----
+	//
+	// Neither of the two above reaches a person playing the Mac client. The
+	// app is SANDBOXED, so a write to ~/Library/Application Support goes into
+	// a container and the file never appears where the launcher says it will;
+	// and stdout belongs to launchd when an app is started by double-clicking
+	// it, so the printf goes nowhere a person can read.
+	//
+	// The bridge is a separate process with no sandbox, it already writes a
+	// log the launcher tells people about, and the window is already talking
+	// to it. So the window says it to the bridge, and the bridge writes it
+	// down. That is the channel this window should have had all along for
+	// anything it needs to tell somebody who is not running an editor.
+	if (Bridge && Bridge->IsConnected())
+	{
+		Bridge->Note(Line);
+	}
 }
 
 void AIntervalHand::BeginPlay()
@@ -3450,9 +3470,11 @@ void AIntervalHand::Tick(float DeltaSeconds)
 		if (Now - WatchedAt >= 0.5)
 		{
 			WatchedAt = Now;
-			// Forty metres of RADIUS, so eighty across: taller than anything
-			// this world builds. The sky, the rain drum and a chunk of ground
-			// are all legitimately vast and are not asked.
+			// TEN metres of radius, so twenty across. The tallest single
+			// thing this world draws is an 11.1 m dead tree and the largest
+			// creature is a 5 m dragon, so twenty across is already wrong.
+			// The sky, the rain drum and a chunk of ground are legitimately
+			// vast and are not asked.
 			constexpr float TooBig = 4000.f;
 			if (UWorld* W = GetWorld())
 			{
@@ -3469,6 +3491,25 @@ void AIntervalHand::Tick(float DeltaSeconds)
 					{
 						UPrimitiveComponent* P = Cast<UPrimitiveComponent>(AC);
 						if (!P || !P->IsVisible() || P->Bounds.SphereRadius < TooBig)
+						{
+							continue;
+						}
+						// ---- ONE OBJECT, NOT A POOL OF THEM ----
+						//
+						// A component's bounds cover everything it draws, and
+						// an instanced pool draws its mesh in a thousand
+						// places across the island: its bounds are the island.
+						// The first cut of this reported a `Cuirass` as 1294
+						// metres across, which is the width of the country the
+						// cuirasses are scattered over and not the size of
+						// anybody's armour. The same goes for a procedural
+						// mesh, which is a chunk of ground or a roof.
+						//
+						// What is left is the single-mesh components, and a
+						// creature drawn at the wrong scale is exactly one of
+						// those.
+						if (P->IsA(UInstancedStaticMeshComponent::StaticClass())
+							|| P->IsA(UProceduralMeshComponent::StaticClass()))
 						{
 							continue;
 						}

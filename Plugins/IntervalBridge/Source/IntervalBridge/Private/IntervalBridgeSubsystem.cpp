@@ -440,6 +440,18 @@ void UIntervalBridgeSubsystem::RequestTerrain(int32 X0, int32 Y0, int32 W, int32
 	SendRaw(Request);
 }
 
+void UIntervalBridgeSubsystem::Note(const FString& Text)
+{
+	// See the note on this in the header. One line, escaped enough to be
+	// valid JSON and no more: this carries machine-made diagnostics, not
+	// anything a person typed.
+	FString Safe = Text;
+	Safe.ReplaceInline(TEXT("\\"), TEXT("/"));
+	Safe.ReplaceInline(TEXT("\""), TEXT("'"));
+	Safe.ReplaceInline(TEXT("\n"), TEXT(" "));
+	Say(FString::Printf(TEXT("{\"k\":\"say\",\"text\":\"%s\"}"), *Safe.Left(400)));
+}
+
 void UIntervalBridgeSubsystem::SendChat(const FString& Text, const FString& Scope)
 {
 	// EIGHTY, which is what the world takes. It was two hundred and forty here,

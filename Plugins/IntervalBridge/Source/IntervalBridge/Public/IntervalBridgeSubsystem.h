@@ -107,6 +107,21 @@ public:
 	void RequestTerrain(int32 X0, int32 Y0, int32 W, int32 H, int32 Skirt = 0);
 
 	/**
+	 * SOMETHING THE WINDOW NEEDS A PERSON TO READ, sent to the bridge so that
+	 * the bridge can write it down.
+	 *
+	 * A Shipping Mac build has no UE_LOG, it is sandboxed so its own file
+	 * writes land in a container nobody opens, and its stdout belongs to
+	 * launchd when the app is double-clicked. The bridge has none of those
+	 * problems and the launcher already prints where its log is, so this is
+	 * the one road out of the window that reaches somebody playing it.
+	 *
+	 * For the window reporting on ITSELF. Not for chat, and not for anything
+	 * the world should hear about: nothing here is a deed.
+	 */
+	void Note(const FString& Text);
+
+	/**
 	 * Send one intent. Type is the world's own verb; Numbers and Text are its
 	 * fields. Nothing is validated here on purpose -- the engine's normalizer
 	 * is the only thing entitled to an opinion, and a refusal comes back

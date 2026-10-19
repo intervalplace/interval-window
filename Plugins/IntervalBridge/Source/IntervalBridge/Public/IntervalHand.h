@@ -952,4 +952,15 @@ private:
 	 */
 	double WatchedAt = 0.0;
 	TSet<FName> SaidTooBig;
+
+	/**
+	 * Say something to whoever is playing, by every road that works.
+	 *
+	 * See the body: a Shipping build has no UE_LOG, a sandboxed app's file
+	 * writes land in a container nobody looks in, and stdout belongs to
+	 * launchd when an app is double-clicked. The one that arrives is the
+	 * bridge, which is a separate process with no sandbox and a log the
+	 * launcher already names.
+	 */
+	void IntervalSay(const FString& Line) const;
 };
