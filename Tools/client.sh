@@ -316,37 +316,58 @@ du -sh "$OUT/Mac/interval.app"
 # see Source/interval.Target.cs. Without that there is nothing to wait for and
 # no way to tell a slow start from a dead one.
 #
-# NO BRIDGE IS NEEDED. The window puts up its own "no bridge" card and goes on
-# running, so this tests the window and nothing else.
-echo "--- does it start"
-# WHAT IT WAITS FOR is the line AIntervalHand::BeginPlay writes into the
-# window's own file. Not a UE log: there isn't one in Shipping, which is the
-# whole reason that file exists. And not a pixel on screen either, because
-# every one of these failures happened before there was a window to look at.
-LOGDIR="$HOME/Library/Application Support/interval"
-rm -f "$LOGDIR/window.log"
-"$OUT/Mac/interval.app/Contents/MacOS/interval-Mac-$CONF" \
-  -intervalbridge="ws://127.0.0.1:1" > /tmp/interval-smoke.log 2>&1 &
-SMOKE=$!
+echo "--- does it start, AND DOES IT REACH THE WORLD"
+# ---- LAUNCHED THE WAY A PERSON LAUNCHES IT, WHICH IS THE WHOLE POINT ----
+#
+# This used to run the executable inside the bundle straight from the shell.
+# That starts, and it proves almost nothing: macOS applies the app sandbox
+# when LAUNCHD starts a .app, so a binary run from a shell is unsandboxed and
+# can do things the real client cannot. The client shipped with no network
+# entitlement and could not open a socket to its own bridge on 127.0.0.1 --
+# "no bridge", every time, on every machine -- and this step said "it starts"
+# about it, because the unsandboxed copy connected happily.
+#
+# So it goes through `open`, like a double-click, and it is not enough for the
+# window to appear: it has to GET INTO THE WORLD. The only thing that proves
+# that is the bridge saying the window spoke to it, because stdout does not
+# come back from an app launched this way.
+echo "--- the bridge for it to talk to"
+SMOKEPORT=7799
+while lsof -nP -iTCP:$SMOKEPORT -sTCP:LISTEN >/dev/null 2>&1; do
+  SMOKEPORT=$((SMOKEPORT + 1))
+done
+SMOKELOG=/tmp/interval-smoke-bridge.log
+NODEFILE="$HOME/Library/Application Support/interval/node.txt"
+SMOKENODE="$(cat "$NODEFILE" 2>/dev/null)"
+[ -n "$SMOKENODE" ] || SMOKENODE="https://interval.place"
+node "$OUT/bridge/unreal-bridge.mjs" --pillar "$SMOKENODE" --port $SMOKEPORT \
+     --key "$HOME/Library/Application Support/interval/key.json" \
+     > "$SMOKELOG" 2>&1 &
+SMOKEBRIDGE=$!
+sleep 6
+
+open -n "$OUT/Mac/interval.app" --args -intervalbridge="ws://127.0.0.1:$SMOKEPORT"
 STARTED=""
 for _ in $(seq 1 120); do
-  # STDOUT, not the window's own log file. The log file is a convenience and
-  # can fail; stdout is the C runtime and cannot. See IntervalSay.
-  if grep -qs "interval: the window is up" /tmp/interval-smoke.log; then STARTED=yes; break; fi
-  kill -0 "$SMOKE" 2>/dev/null || break
+  # THE BRIDGE SAYING THE WINDOW SPOKE. Nothing else distinguishes a window
+  # that is drawing the world from one showing its own "no bridge" card.
+  if grep -qs "the window reports what it has seen" "$SMOKELOG"; then STARTED=yes; break; fi
   sleep 1
 done
-kill "$SMOKE" 2>/dev/null || true
-wait "$SMOKE" 2>/dev/null || true
+pkill -f "interval-Mac-$CONF" 2>/dev/null || true
+kill "$SMOKEBRIDGE" 2>/dev/null || true
 if [ -z "$STARTED" ]; then
-  echo "THE CLIENT DOES NOT START. It was built and installed and it is not playable."
-  echo "the newest crash report says why:"
+  echo "THE CLIENT NEVER REACHED THE WORLD. It was built and installed and it is not playable."
+  echo "what the bridge saw:"
+  tail -6 "$SMOKELOG" 2>/dev/null
+  echo "what the window is allowed to do:"
+  codesign -d --entitlements - "$OUT/Mac/interval.app" 2>&1 | grep -A 1 "network.client" \
+    || echo "  NO com.apple.security.network.client: a sandboxed app cannot open a socket."
+  echo "the newest crash report, if it died:"
   ls -t "$HOME/Library/Logs/DiagnosticReports" 2>/dev/null | grep -i "interval-Mac" | head -1
-  echo "  (read the \"termination\" field: a missing library is named there in full)"
-  tail -5 /tmp/interval-smoke.log 2>/dev/null
   exit 1
 fi
-echo "it starts"
+echo "it starts and it is in the world"
 
 # 5. AND A ZIP FOR THE NODE TO HAND OUT.
 #

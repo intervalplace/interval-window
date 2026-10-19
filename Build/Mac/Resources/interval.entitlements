@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  WHAT THIS WINDOW IS ALLOWED TO DO, which until now did not include
+	  talking to its own bridge.
+
+	  The engine's own default gives a DEVELOPMENT Mac build network and a
+	  SHIPPING one none: Sandbox.Server.entitlements against
+	  Sandbox.NoNet.entitlements, both named in BaseEngine.ini. A sandboxed
+	  app with no network entitlement cannot open a socket to anything, not
+	  even to 127.0.0.1, and this window's entire knowledge of the world
+	  arrives down a websocket to a bridge on the loopback. So the client put
+	  up its own "no bridge" card, every time, on every machine, while a
+	  perfectly healthy bridge sat on the port it was told about -- and it
+	  began the day the downloadable client became Shipping, for the unrelated
+	  and good reason written at the top of Tools/client.sh.
+
+	  IT PASSED EVERY TEST BECAUSE OF HOW THE TESTS LAUNCHED IT. Running the
+	  executable inside the bundle straight from a shell does not apply the
+	  sandbox at all: macOS applies it when launchd starts the .app. So the
+	  measurements, the start test in client.sh and every run of the window
+	  during a day of work were all of an UNSANDBOXED process that connected
+	  happily, and the one way nobody tried was the way a person plays it,
+	  which is to double-click. Tools/client.sh now launches the bundle.
+
+	  network.client and nothing else: the window dials out to the bridge and
+	  never listens, so it has no business with network.server.
+	-->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+</dict>
+</plist>
