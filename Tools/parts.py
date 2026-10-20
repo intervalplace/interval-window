@@ -2193,24 +2193,52 @@ def weapon(word, shape):
 #
 # That gives two sentences and two rotations:
 #
-#   A WEAPON RUNS OUT PAST THE FINGERS. Its length lies along the bone's -X,
+#   A WEAPON RUNS OUT PAST THE FINGERS. Its length lies along the bone's +X,
 #   so it continues the line of the forearm whatever the arm is doing. Hanging
-#   arm, the axe hangs; arm raised to strike, the axe leads. (90, 0, 0).
+#   arm, the axe hangs; arm raised to strike, the axe leads. (-90, 0, 0).
 #
-#   A SHIELD STANDS UP ON THE ARM WITH ITS FACE OUT. Its length lies along the
-#   bone's Y, which is up, and its face along the bone's X, which for the off
-#   hand is away from the body. (90, 0, 90).
+#   THE SIGN WAS WRONG THE FIRST TIME, and a direction cannot be checked by
+#   looking at a weapon end-on: from four angles round the citizen the fist
+#   simply looked empty. What settles it is where the two ENDS of the thing
+#   are, in the world:
+#
+#     the butt ... 88 cm up, 5.5 cm from the fist, 39.3 cm out from her centre
+#     the head ... 79 cm up, 45.7 cm from the fist, 13.1 cm from her centre
+#
+#   The head was nearer her spine than her hand was: the hatchet ran from the
+#   fist INWARD and finished inside her hip. So -X is toward the body on this
+#   skeleton, whatever the old note over `blade` says about the hand bone
+#   running wrist to elbow -- that note was written for the composed primitive
+#   weapons and is not true of the figure the world actually draws.
+#
+#   A SHIELD STANDS UP ON THE ARM WITH ITS FACE OUT. (0, 0, 90).
+#
+#   THE FIRST ANSWER HERE WAS (90, 0, 90) AND IT PUT THE ARM INSIDE THE
+#   SHIELD. Not by a little: a pitch of ninety maps the mesh's own X onto the
+#   bone's Z, which leaves the shield's FACE and its LENGTH both lying in the
+#   bone's XY plane -- and the arm is the bone's X. So the forearm was in the
+#   plane of the boards by construction, and no amount of moving the grip
+#   across the shield's fifteen centimetres of thickness could get it out:
+#   tried at the front face, the middle and the back, and the arm went through
+#   all three. Photographed from her left, the shield was edge-on with her
+#   wrist emerging from the middle of it.
+#
+#   What has to be true is that the arm is NOT in that plane, which means the
+#   mesh's own X must run ALONG the bone's X. That needs a pitch of nought,
+#   and then the roll alone decides which way up: ninety puts the length on
+#   the bone's Y, which is up, and the face on its Z, square to the arm.
 #
 # And measured back out of the window afterwards, the same way:
 #
 #   the axe's length points ...... ( 0.81, -0.55, -0.20)  out along the arm
-#   the shield's length points .... ( 0.06,  0.04,  1.00)  up
-#   the shield's face points ...... (-0.12,  0.99, -0.04)  out to their left
+#   the shield's length points .... ( 0.02,  0.00,  1.00)  up
+#   the shield's face points ...... square to the forearm, which is the thing
+#                                   the first answer could not manage
 #
 # Photographed from in front, from the side and from behind as well, because a
 # weapon pointing at the camera reads as correct from one angle and is not.
-GRIP_TURN_WEAPON = (90.0, 0.0, 0.0)     # pitch, yaw, roll
-GRIP_SHIELD = (90.0, 0.0, 90.0)
+GRIP_TURN_WEAPON = (-90.0, 0.0, 0.0)     # pitch, yaw, roll
+GRIP_SHIELD = (0.0, 0.0, 90.0)
 
 # ---- AND WHERE ALONG ITSELF THE THING IS HELD ----
 #
@@ -2264,12 +2292,37 @@ GRIP_SHIELD = (90.0, 0.0, 90.0)
 # The check that this is not another story told about numbers: the staff's own
 # fraction is its pivot's, 0.632, which makes its correction exactly zero and
 # leaves the one grip known to be right exactly where it was.
+# ---- AND THE THINGS THAT ARE NOT SWUNG ----
+#
+# GRIP_TURN_WEAPON lays a thing along the forearm, out past the fingers, which
+# is right for everything that is swung: an axe, a sword, a mell, a pick. It
+# is WRONG for a shaft that is held upright in the fist, and giving it to one
+# of those is how a longbow came to lie flat along the arm like a lance.
+# `ARMED` sends the four kit bows and the torch through `held` with everything
+# else, so they went the same way the hatchet did and nobody looked.
+#
+# The note over the crossbows a few lines down says what a longbow is: "a tall
+# D held upright beside the body". A torch is the same shape of problem and
+# must point UP or it is a brand being dragged along the ground.
+#
+# They take the staff's turn, because a staff is the same thing: a long shaft
+# standing in the fist, and it is the one grip in this project that was ever
+# photographed and found correct.
+UPRIGHT_IN_FIST = {
+    'Bow_Wooden', 'Bow_Wooden2', 'Bow_Evil', 'Bow_Golden',
+    'Torch_Metal',
+}
+
+
 def held(mesh, bone='hand_r', s=1.0, ox=None, oy=None, oz=None,
          pitch=None, yaw=None, roll=None):
     # EVERY WEAPON IN THIS KIT RUNS ALONG ITS OWN +Z, and so does the staff the
     # hand was measured on -- see kit_bounds.json. So a weapon takes the hand's
     # own turn, and does not need one reasoned out from its blade's axes.
-    grip = GRIP_SHIELD if bone == 'hand_l' else GRIP_TURN_WEAPON
+    if mesh in UPRIGHT_IN_FIST:
+        grip = GRIP_TURN_STAFF
+    else:
+        grip = GRIP_SHIELD if bone == 'hand_l' else GRIP_TURN_WEAPON
     if pitch is None: pitch = grip[0]
     if yaw is None:   yaw = grip[1]
     if roll is None:  roll = grip[2]

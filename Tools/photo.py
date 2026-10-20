@@ -46,6 +46,11 @@
 #   INTERVAL_PHOTO_BONE   aim at this bone instead of a height off the floor.
 #                         `hand_r` is the fist everything is hung on, so this
 #                         is how to look at a grip rather than at a person.
+#   INTERVAL_PHOTO_ABOVE  degrees above the horizontal to look down from.
+#                         THE WINDOW'S OWN CAMERA IS ABOUT SIXTY, and a grip
+#                         judged from a near-horizontal view is a grip judged
+#                         from an angle nobody plays at: the first pass at
+#                         this was shot from fourteen degrees and passed.
 #   INTERVAL_PHOTO_ROUND  degrees round the figure to stand, 0 being IN FRONT
 #                         of them and 90 at their left shoulder. Relative to
 #                         the figure's own facing, because "north" is not a
@@ -69,6 +74,7 @@ AT = os.environ.get('INTERVAL_PHOTO_AT', '')
 HIGH = float(os.environ.get('INTERVAL_PHOTO_HIGH', '110'))
 BONE = os.environ.get('INTERVAL_PHOTO_BONE', '')
 ROUND = float(os.environ.get('INTERVAL_PHOTO_ROUND', '0'))
+ABOVE = float(os.environ.get('INTERVAL_PHOTO_ABOVE', '14'))
 NAME = os.environ.get('INTERVAL_PHOTO_NAME', 'photo')
 
 
@@ -118,7 +124,8 @@ def main():
         # photographed the same shoulder twice.
         rad = math.radians(ROUND + comp.get_world_rotation().yaw + 180.0)
         toward = unreal.Vector(math.cos(rad), math.sin(rad), 0.0)
-        where = at - toward * back + unreal.Vector(0, 0, back * 0.25)
+        lift = math.tan(math.radians(max(1.0, min(85.0, ABOVE))))
+        where = at - toward * back + unreal.Vector(0, 0, back * lift)
         facing = unreal.MathLibrary.find_look_at_rotation(where, at)
         unreal.log('PHOTO: %s, %.1f m from the camera'
                    % (str(comp.skeletal_mesh.get_name()), how_far / 100.0))
