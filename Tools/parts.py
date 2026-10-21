@@ -2159,86 +2159,65 @@ def weapon(word, shape):
 
 # ---- HOW A KIT ITEM SITS IN THE FIST ----
 #
-# MEASURED, AND THEN MEASURED AGAIN BECAUSE IT WAS STILL WRONG.
+# MEASURED IN THE BODY'S OWN FRAME, after three attempts that were not.
 #
-# The first answer here was derived from one photograph of one citizen in one
-# pose, and the numbers it produced were a pure ROLL of 145 degrees for a
-# weapon and (-9.1, -132.6, -155.1) for a shield. Reported as still wrong, and
-# it was: asked what the live window was actually doing, in the body's own
-# frame of forward / left / up,
+# The first three answers here -- a pure roll of 145, then (90,0,0), then
+# (-90,0,0) -- were each derived from where a thing POINTED, in a frame taken
+# from the skeletal component's own rotation. That frame is not the body's. A
+# mesh is authored facing whichever way its maker chose, and this one is
+# turned ninety degrees from the way the citizen looks, so every one of those
+# three derivations was reasoning about "forward" while measuring something
+# else. They came out wrong in the same way three times, which is what a
+# rotated frame does.
 #
-#   the axe's length pointed .... ( 0.15, -0.10,  0.98)   straight up
-#   the shield's face pointed .... (-0.29, -0.78,  0.56)  across the body, at
-#                                                          the sky
+# THE FRAME IS BUILT FROM HER BONES NOW and no mesh author gets a vote:
 #
-# An axe stood on end in the fist, and a shield carried flat like a tray with
-# its face turned over the citizen's own shoulder. The note that used to be
-# here said the tray had been fixed. It had not.
+#   up       pelvis -> head
+#   right    upperarm_l -> upperarm_r
+#   forward  up cross right
 #
-# WHY A DERIVATION CAN BE RIGHT AND STILL WRONG. A relative rotation on a bone
-# is pose-independent -- the hand turns and what it holds turns with it -- but
-# the DIRECTIONS it was fitted to were read out of one pose, and in that pose
-# the arm happened to be raised and out in front. A grip fitted that way reads
-# correctly from exactly one stance and from nowhere else, and the citizen the
-# complaint was about was walking.
+# Read in that frame, with the citizen standing in the world:
 #
-# SO THE RULE IS STATED IN THE BONE'S OWN AXES, which do not care about the
-# pose at all. On this skeleton the hand bone's X runs ALONG the arm, wrist to
-# elbow -- there is no finger bone for `hand_r` to point at, so it keeps its
-# parent's direction. And every mesh in this kit that is ever HELD runs along
-# its own +Z, with a shield's face at its own +Y: checked against the measured
-# extents of all twenty-five rather than assumed, since the whole rule rests on
-# it. The one exception is `Arrow`, which runs along +Y, and an arrow is never
-# held -- it is a thing lying on the bowyer's stall with a rotation of its own.
+#   hand_r    X is UP      Y is BACK    Z is RIGHT, and the forearm runs Z
+#   hand_l    X is DOWN    Y is BACK    Z is LEFT,  and the forearm runs Z
 #
-# That gives two sentences and two rotations:
+# SO THE OLD NOTE OVER `blade` IS WRONG ABOUT THIS FIGURE. It says the hand
+# bone's X runs along the arm, wrist to elbow, and everything built on that
+# has been wrong: X is vertical and it is the bone's Z that runs out along the
+# forearm. That note was written for the composed primitive weapons and was
+# carried over to a skeleton it was never measured on.
 #
-#   A WEAPON RUNS OUT PAST THE FINGERS. Its length lies along the bone's +X,
-#   so it continues the line of the forearm whatever the arm is doing. Hanging
-#   arm, the axe hangs; arm raised to strike, the axe leads. (-90, 0, 0).
+# What was actually being drawn before this, in the body's frame: the hatchet
+# stood STRAIGHT UP beside her ear, and the shield's face pointed at her own
+# ribs, which is why an arm went through it.
 #
-#   THE SIGN WAS WRONG THE FIRST TIME, and a direction cannot be checked by
-#   looking at a weapon end-on: from four angles round the citizen the fist
-#   simply looked empty. What settles it is where the two ENDS of the thing
-#   are, in the world:
+#   A WEAPON RUNS OUT ALONG THE FOREARM, past the fingers. (0, 0, 0): the
+#   mesh's own +Z onto the bone's +Z, which is the one thing here that does
+#   not move.
 #
-#     the butt ... 88 cm up, 5.5 cm from the fist, 39.3 cm out from her centre
-#     the head ... 79 cm up, 45.7 cm from the fist, 13.1 cm from her centre
+#   AND THE REASON IT IS STATED THAT WAY. The attempt before this one aimed
+#   the hatchet at the body's FORWARD, because that is what it looked like it
+#   wanted in the frame that was measured. It was then measured again after a
+#   restart and came out at (0.72, -0.17, -0.68), pointing forward and down,
+#   because the citizen had moved: a grip fitted to where a bone happened to
+#   be pointing in one frame of an animation is fitted to nothing at all. That
+#   is the same mistake as the first three, one level further in.
 #
-#   The head was nearer her spine than her hand was: the hatchet ran from the
-#   fist INWARD and finished inside her hip. So -X is toward the body on this
-#   skeleton, whatever the old note over `blade` says about the hand bone
-#   running wrist to elbow -- that note was written for the composed primitive
-#   weapons and is not true of the figure the world actually draws.
+#   A bone's own axes do not move. The forearm runs along the bone's Z in both
+#   hands -- measured, elbow to wrist, against the bone's own Z, and they
+#   agree to within a hundredth -- so a haft laid on the bone's Z continues
+#   the arm in every pose there will ever be.
 #
-#   A SHIELD STANDS UP ON THE ARM WITH ITS FACE OUT. (0, 0, 90).
+#   A SHIELD'S FACE LOOKS OUT ALONG THE FOREARM, which is where a shield
+#   strapped to an arm faces, and its length stands square to it. So the face
+#   goes on the bone's Z and the length on its X. (0, -90, -90). Stated in the
+#   bone's axes for the same reason the weapon is: so that it holds whatever
+#   the arm is doing, and nothing passes through the boards.
 #
-#   THE FIRST ANSWER HERE WAS (90, 0, 90) AND IT PUT THE ARM INSIDE THE
-#   SHIELD. Not by a little: a pitch of ninety maps the mesh's own X onto the
-#   bone's Z, which leaves the shield's FACE and its LENGTH both lying in the
-#   bone's XY plane -- and the arm is the bone's X. So the forearm was in the
-#   plane of the boards by construction, and no amount of moving the grip
-#   across the shield's fifteen centimetres of thickness could get it out:
-#   tried at the front face, the middle and the back, and the arm went through
-#   all three. Photographed from her left, the shield was edge-on with her
-#   wrist emerging from the middle of it.
-#
-#   What has to be true is that the arm is NOT in that plane, which means the
-#   mesh's own X must run ALONG the bone's X. That needs a pitch of nought,
-#   and then the roll alone decides which way up: ninety puts the length on
-#   the bone's Y, which is up, and the face on its Z, square to the arm.
-#
-# And measured back out of the window afterwards, the same way:
-#
-#   the axe's length points ...... ( 0.81, -0.55, -0.20)  out along the arm
-#   the shield's length points .... ( 0.02,  0.00,  1.00)  up
-#   the shield's face points ...... square to the forearm, which is the thing
-#                                   the first answer could not manage
-#
-# Photographed from in front, from the side and from behind as well, because a
-# weapon pointing at the camera reads as correct from one angle and is not.
-GRIP_TURN_WEAPON = (-90.0, 0.0, 0.0)     # pitch, yaw, roll
-GRIP_SHIELD = (0.0, 0.0, 90.0)
+# Both checked by putting the numbers back through the same frame afterwards,
+# and photographed from in front, from the side and from behind.
+GRIP_TURN_WEAPON = (0.0, 0.0, 0.0)       # pitch, yaw, roll
+GRIP_SHIELD = (0.0, -90.0, -90.0)
 
 # ---- AND WHERE ALONG ITSELF THE THING IS HELD ----
 #
